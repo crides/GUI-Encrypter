@@ -305,12 +305,12 @@ class Settings():
                 settings[j[0]] = j[1]
             file.close()
             
-            global lang, mode
-            lang = settings.get('Language')
-            mode = settings.get('Mode')
+            global olang, omode
+            olang = settings.get('Language')
+            omode = settings.get('Mode')
             
             global liblang
-            if lang == 'en_US':
+            if olang == 'en_US':
                 from Lang import en_US as liblang
             else:
                 from Lang import zh_CN as liblang
@@ -322,9 +322,9 @@ class Settings():
             file.close()
             del lang, mode
             
-            global lang, mode
-            lang = 'en_US'
-            mode = 'Normal'
+            global olang, omode
+            olang = 'en_US'
+            omode = 'Normal'
 
     def SettingDialog():
         option = tkinter.Toplevel(root)
@@ -333,7 +333,7 @@ class Settings():
 
         y = (option.winfo_screenheight() - 25)/2 - 100
         x = (option.winfo_screenwidth() - 65)/2 - 120
-        option.geometry("235x195+%d+%d" % (x, y))
+        option.geometry("235x205+%d+%d" % (x, y))
         
         optionframe = ttk.Frame(option, padding='3 3 12 12')
         optionframe.grid(column=0, row=0)
@@ -342,29 +342,29 @@ class Settings():
         chosen1 = tkinter.StringVar()
         chosen2 = tkinter.StringVar()
         
-        langframe = tkinter.LabelFrame(optionframe, text='Language', font=ubuntu)
+        langframe = tkinter.LabelFrame(optionframe, text=liblang.Lbl_set_Label[0], font=ubuntu)
         langframe.grid(column=0, row=1, columnspan=2, sticky='NSWE')
         eng = tkinter.Radiobutton(langframe, text='English', font=ubuntu, variable=chosen1, value='en_US')
         eng.grid(column=1, row=2, sticky='WN')
         chn = tkinter.Radiobutton(langframe, text='中文', font=ubuntu, variable=chosen1, value='zh_CN')
         chn.grid(column=2, row=2, sticky='WN')
-        tkinter.Label(langframe, text='Note: You should restart the program to apply the lang change.', font=ubuntus, wrap=220, anchor='w', justify='left').grid(column=1, row=3, columnspan=2, sticky='WN')
+        tkinter.Label(langframe, text=liblang.set_Note, font=ubuntus, wrap=220, anchor='w', justify='left').grid(column=1, row=3, columnspan=2, sticky='WN')
 
-        modeframe = tkinter.LabelFrame(optionframe, text='Mode', font=ubuntu)
+        modeframe = tkinter.LabelFrame(optionframe, text=liblang.Lbl_set_Label[1], font=ubuntu)
         modeframe.grid(column=0, row=2, columnspan=2, sticky='NSWE')
-        nrm = tkinter.Radiobutton(modeframe, text='Normal', font=ubuntu, variable=chosen2, value='Normal')
+        nrm = tkinter.Radiobutton(modeframe, text=liblang.Lbl_set_Label[2], font=ubuntu, variable=chosen2, value='Normal')
         nrm.grid(column=1, row=4, sticky='WN')
-        hexmode = tkinter.Radiobutton(modeframe, text='Hex mode', font=ubuntu, variable=chosen2, value='Hex')
+        hexmode = tkinter.Radiobutton(modeframe, text=liblang.Lbl_set_Label[3], font=ubuntu, variable=chosen2, value='Hex')
         hexmode.grid(column=2, row=4, sticky='EN')
 
-        if lang == 'en_US':eng.select()
+        if olang == 'en_US':eng.select()
         else:chn.select()
-        if mode == 'Normal':nrm.select()
+        if omode == 'Normal':nrm.select()
         else:hexmode.select()
         
         tkinter.Label(optionframe).grid(column=0, row=3)
-        tkinter.Button(optionframe, text='Apply', font=ubuntus, command=Settings.applyset).grid(column=0, row=4, sticky='WS')
-        tkinter.Button(optionframe, text='Close', font=ubuntus, command=option.destroy).grid(column=1, row=4, sticky='ES')
+        tkinter.Button(optionframe, text=liblang.Lbl_set_Btn[0], font=ubuntus, command=Settings.applyset).grid(column=0, row=4, sticky='WS')
+        tkinter.Button(optionframe, text=liblang.Lbl_set_Btn[1], font=ubuntus, command=option.destroy).grid(column=1, row=4, sticky='ES')
         
     def applyset():
 
@@ -375,7 +375,7 @@ class Settings():
         mode = 'Mode' + '=' + mode
         file.write('\n'.join((lang, mode)))
         file.close()
-##        del chosen1, chosen2 XXX
+##        del chosen1, chosen2
         Settings()
 
 Settings()
