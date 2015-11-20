@@ -11,7 +11,10 @@ class en_US():
     Time_Encrypted = 'Encrypted on: '
     
     Lbl_Label = ['TextBox', 'Status', 'Message', 'Time Used']
+    Lbl_set_Label = ['Language', 'Mode', 'Normal', 'Hex mode']
+    
     Lbl_Btn = ['Encrypt', 'Decrypt', 'Clear', 'About']
+    Lbl_set_Btn = ['Apply', 'Close']
     
     def ABOUT():
         '''This is a program which is used to encrypt and decrypt strings written by Zhu Haoqing. The Program is originally written by zhangjingye (Github: zhangjingye03) in JavaScript, translated by zhuhaoqing (Github: Irides-Chromium) into Python3. The Program can only decrypt strings which were encrypted by (any branches, or the original web version by Zhang Jingye) this program.
@@ -38,6 +41,8 @@ Zhu Haoqing
     Menu_Edit = 'Edit'
     Menu_Help = 'Help'
     Menu_Edit_ = ['Copy', 'Cut', 'Paste', 'Select all', 'Preference']
+
+    set_Note = 'Note: You should restart the program to apply the lang change.\n注意：您应重启程序来应用语言选项'
     
 class zh_CN():
     Title = '加密器'
@@ -50,7 +55,10 @@ class zh_CN():
     Time_Encrypted = '此时被加密：'
     
     Lbl_Label = ['文本框', '状态', '信息', '耗时']
+    Lbl_set_Label = ['语言', '模式', '普通', '十六进制']
+    
     Lbl_Btn = ['加密', '解密', '清除', '关于']
+    Lbl_set_Btn = ['应用', '关闭']
     
     def ABOUT():
         '''这是一个由 Zhu Haoqing 编写的用于加密和解密字符串的程序。这个程序原本由 zhangjingye (Github: zhangjingye03) 用JavaScript编写，由 Zhu Haoqing (Github: Irides-Chromium) 翻译成为 Python3。本程序只能解密由(任意分支或原网页版的)本程序加密的字符串。
@@ -73,3 +81,5 @@ class zh_CN():
     Menu_Edit = '编辑'
     Menu_Help = '帮助'
     Menu_Edit_ = ['拷贝', '剪切', '粘帖', '全选', '选项']
+
+    set_Note = 'Note: You should restart the program to apply the lang change.\n注意：您应重启程序来应用语言选项'
