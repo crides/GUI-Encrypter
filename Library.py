@@ -110,17 +110,17 @@ def encrypter(string):
         ret = '~'
         d = str(int(time.time()*1000))
         part2 = d[10:13]
-        p2 = scale(10, 15, reverse(part2))
+        p2 = scale(10, 25, reverse(part2))
         part4 = string;
         part6 = int(round(random()*100))
         p6 = scale(10, 3, part6)
         part7 = d[0:5]
-        p7 = reverse(scale(10, 36, (int(part7) + 15 - int(p6))))
+        p7 = reverse(scale(10, 36, (int(part7) + 25 - int(p6))))
         part8 = int(round(random()*10));
         if part8 == 0: part8 = 10
         p8 = scale(10, 9, part8)
         part9 = d[5:10]
-        p9 = reverse(scale(10, 35, (int(part9) - 15*part8)))
+        p9 = reverse(scale(10, 35, (int(part9) - 25*part8)))
         p4 = uc3(part4, part2, part7)
         ret += p2 +'!'
         ret += p4 +'!'
@@ -140,13 +140,13 @@ def decrypter(string, checksum):
         fT = int(time.time()*1000)
         string = string[1:-1]
         string = string.split('!')
-        part2 = reverse(int(string[0], 15))
+        part2 = reverse(int(string[0], 25))
         part69 = string[2].split(',');
         part6 = int(part69[0], 3)
-        part7 = int(reverse(part69[1]), 36) - 15 + int(part69[0])
+        part7 = int(reverse(part69[1]), 36) - 25 + int(part69[0])
         part8 = int(part69[2])
         part9 = reverse(part69[3])
-        part9 = int(part9, 35) + (15*part8)
+        part9 = int(part9, 35) + (25*part8)
         part4 = string[1]
         part4 = un3(part4, part2, part7);
         lT = int(time.time()*1000)
@@ -166,9 +166,9 @@ def uc3(this, utc, it):
     n = count(this)
     for i in range(n):
         if i%2 != 0:
-            retn += str(scale(10, 15, str(ord(this[i]) + int(utc) - int(i)))) + ','
+            retn += str(scale(10, 25, str(ord(this[i]) + int(utc) - int(i)))) + ','
         else:
-            retn += str(scale(10, 12, str(ord(this[i]) - int(it) + int(i)))) + ','
+            retn += str(scale(10, 26, str(ord(this[i]) - int(it) + int(i)))) + ','
 
     retn = retn[0:-1];
     return retn
@@ -180,9 +180,9 @@ def un3(this, utc, it):
     tmmp = this.split(',')
     for i in range(count(tmmp)):
         if i%2 != 0:
-            retn += chr(int(int(tmmp[i], 15) - utc + int(i)))
+            retn += chr(int(int(tmmp[i], 25) - utc + int(i)))
         else:
-            retn += chr(int(tmmp[i], 12) + int(it) - i)
+            retn += chr(int(tmmp[i], 26) + int(it) - i)
     return retn
 
 class Default():
