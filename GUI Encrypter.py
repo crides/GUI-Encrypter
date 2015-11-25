@@ -35,6 +35,74 @@ from math import floor
 from random import random
 from tkinter import ttk
 
+def cleartext():
+    TextStatus.set('')
+    Message.set('')
+    TimeUsed.set('')
+    TextBox.delete('1.0', 'end')
+
+def encrypt(*args):
+    Text = TextBox.get('1.0', 'end')
+    if Text == '' or Text == '\n' or Text == ' ':
+        Message.set(liblang.Msg_ERR)
+    uText = Text.encode('utf-8')
+    bak = Text
+    jmh = encrypter(Text)
+    Text = jmh[0]
+    needtime = jmh[1]
+    ol = decrypter(Text, True)
+    dct = ol
+    if dct != bak:
+        TextStatus.set(liblang.Msg_Stat_Enc[0])
+    else:
+        cleartext()
+        TextStatus.set(liblang.Msg_Stat_Enc[1])
+        TimeUsed.set(str(needtime) + liblang.Time_Encryption)
+        TextBox.insert('1.0', Text)
+
+def decrypt(*args):
+    Text = TextBox.get('1.0', 'end')
+    if Text == '' or Text == '\n' or Text == ' ' or Text[0] != '~':
+        Message.set(liblang.Msg_ERR)
+    Text = decrypter(Text, False)
+    if type(Text) == type(('2',)):
+        cleartext()
+        TextBox.insert('1.0', Text[0])
+        TextStatus.set(liblang.Msg_Stat_Dec[1])
+        Message.set(liblang.Time_Encrypted + Text[1])
+        TimeUsed.set(str(Text[2]) + liblang.Time_Encryption) 
+    else:
+        TextStatus.set(liblang.Msg_Stat_Dec[0])
+
+def about(*args):
+    cleartext()
+    TextBox.insert('1.0', liblang.ABOUT.__doc__)
+    
+def Quit(*args):
+    win.destroy()
+    option.destroy()
+    root.destroy()
+
+def selectall():
+    TextBox.tag_add("sel", "1.0", "end-1c")
+    TextBox.mark_set("insert", "1.0")
+    TextBox.see("insert")
+
+def showhelp(*args):
+    win = tkinter.Toplevel(root)
+    win.title(liblang.Menu_Help)
+    win.resizable(False, False)
+
+    helpframe = ttk.Frame(win, padding='3 3 12 12')
+    helpframe.grid(column=0, row=0)
+    global helptext
+    helptext = tkinter.StringVar()
+    y = (win.winfo_screenheight() - 25)/2 - 50
+    x = (win.winfo_screenwidth() - 65)/2 - 140
+    win.geometry("275x100+%d+%d" % (x, y))
+    ttk.Label(helpframe, width=35, textvariable=helptext, font=ubuntu, wrap=260).grid(column=0, row=0, rowspan=5, sticky='NSWE')
+    helptext.set(liblang.HELP.__doc__)
+
 class Settings():
 
     def __init__(self):
@@ -146,11 +214,10 @@ edit.add_command(label=liblang.Menu_Edit_[1])
 edit.add_command(label=liblang.Menu_Edit_[2])
 edit.add_command(label=liblang.Menu_Edit_[3])
 edit.add_separator()
-
 edit.add_command(label=liblang.Menu_Edit_[4])
 
-edit.entryconfigure(liblang.Menu_Edit_[0], command=lambda: root.event_generate("<Control-x>"))
-edit.entryconfigure(liblang.Menu_Edit_[1], command=lambda: root.event_generate("<Control-c>"))
+edit.entryconfigure(liblang.Menu_Edit_[0], command=lambda: root.event_generate("<Control-c>"))
+edit.entryconfigure(liblang.Menu_Edit_[1], command=lambda: root.event_generate("<Control-x>"))
 edit.entryconfigure(liblang.Menu_Edit_[2], command=lambda: root.event_generate("<Control-v>"))
 edit.entryconfigure(liblang.Menu_Edit_[3], command=selectall)
 edit.entryconfigure(liblang.Menu_Edit_[4], command=Settings.SettingDialog)
