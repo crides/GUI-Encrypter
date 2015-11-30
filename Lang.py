@@ -11,7 +11,7 @@ class en_US():
     Time_Encrypted = 'Encrypted on: '
     
     Lbl_Label = ['TextBox', 'Status', 'Message', 'Time Used']
-    Lbl_set_Label = ['Language', 'Mode', 'Normal', 'Hex mode']
+    Lbl_set_Label = ['Language', 'Mode', 'Normal', 'Hexage']
     
     Lbl_Btn = ['Encrypt', 'Decrypt', 'Clear', 'About']
     Lbl_set_Btn = ['Apply', 'Close']
@@ -42,7 +42,7 @@ Zhu Haoqing
     Menu_Help = 'Help'
     Menu_Edit_ = ['Copy', 'Cut', 'Paste', 'Select all', 'Preference']
 
-    set_Note = 'Note: You should restart the program to apply the lang change.\n注意：您应重启程序来应用语言选项'
+    set_Note = 'Note: You should restart the program to apply the change.\n注意：您应重启程序来应用选项'
     
 class zh_CN():
     Title = '加密器'
@@ -82,4 +82,4 @@ class zh_CN():
     Menu_Help = '帮助'
     Menu_Edit_ = ['拷贝', '剪切', '粘帖', '全选', '选项']
 
-    set_Note = 'Note: You should restart the program to apply the lang change.\n注意：您应重启程序来应用语言选项'
+    set_Note = 'Note: You should restart the program to apply the change.\n注意：您应重启程序来应用选项'
