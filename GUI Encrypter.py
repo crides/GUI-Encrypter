@@ -1,28 +1,21 @@
 #!/usr/bin/python3.4
 # -*- coding: utf-8 -*-
 ### GUI Encrypter by Zhu Haoqing(Originally Zhangjingye) ###
-### Rev: 2.0
+### Rev: 3.0
 ### Runtime Environment: Python3
+### Hexage Mode added
 
 #   FUNCTIONS
 
-#   scale           Change Scale for the Number
-#   count           Count Numbers of Items in Iterables
 #   cleartext       Clear Text and Info in Window
-#   reverse         Turn the string around
 #   encrypt         General Decryption Function (Button Encrypt)
 #   decrypt         General Decryption Function (Button Decrypt)
-#   encrypter       Encrypt the String and Output
-#   decrypter       Decrypt the String and Output
-#   uc3             Intermediate Encryption Funtion
-#   un3             Intermediate Decryption Funtion
 #   ABOUT           Docstring of About
 #   about           Show About
 #   Quit            Quit the Program (Keyboard Escape)
 #   selectall       Edit menu -> selectall
-#   HELP            Doctring of Help
 #   showhelp        Help menu -> Help
-#   preference      Edit menu -> Preference
+#   Settings        Apply the Settings at Start, Show Preference Dialog, and Apply the Settings when Complete
 
 import Lang
 import Library
@@ -42,37 +35,54 @@ def cleartext():
     TextBox.delete('1.0', 'end')
 
 def encrypt(*args):
-    Text = TextBox.get('1.0', 'end')
-    if Text == '' or Text == '\n' or Text == ' ':
-        Message.set(liblang.Msg_ERR)
-    uText = Text.encode('utf-8')
-    bak = Text
-    jmh = encrypter(Text)
-    Text = jmh[0]
-    needtime = jmh[1]
-    ol = decrypter(Text, True)
-    dct = ol
-    if dct != bak:
-        TextStatus.set(liblang.Msg_Stat_Enc[0])
-    else:
+    Text = TextBox.get('1.0', 'end')[:-1]
+    if Text == ''\
+    or Text == '\n'\
+    or Text == ' ':
         cleartext()
-        TextStatus.set(liblang.Msg_Stat_Enc[1])
-        TimeUsed.set(str(needtime) + liblang.Time_Encryption)
-        TextBox.insert('1.0', Text)
+        Message.set(liblang.Msg_ERR)
+    else:
+        ectstr = encrypter(Text, omode)
+        code = ectstr[0]
+        needtime = ectstr[1]
+        dctstr = decrypter(code, True)
+        if dctstr != Text:
+            cleartext()
+            TextStatus.set(liblang.Msg_Stat_Enc[0])
+        else:
+            if omode == 'Hex':
+                code = hexencrypter(code)
+            cleartext()
+            TextStatus.set(liblang.Msg_Stat_Enc[1])
+            TimeUsed.set(str(needtime) + liblang.Time_Encryption)
+            TextBox.insert('1.0', code)
 
 def decrypt(*args):
-    Text = TextBox.get('1.0', 'end')
-    if Text == '' or Text == '\n' or Text == ' ' or Text[0] != '~':
-        Message.set(liblang.Msg_ERR)
-    Text = decrypter(Text, False)
-    if type(Text) == type(('2',)):
+    Code = TextBox.get('1.0', 'end')
+    if Code == ''\
+    or Code == '\n'\
+    or Code == ' '\
+    or Code[0] != '~':
         cleartext()
-        TextBox.insert('1.0', Text[0])
-        TextStatus.set(liblang.Msg_Stat_Dec[1])
-        Message.set(liblang.Time_Encrypted + Text[1])
-        TimeUsed.set(str(Text[2]) + liblang.Time_Encryption) 
+        Message.set(liblang.Msg_ERR)
     else:
-        TextStatus.set(liblang.Msg_Stat_Dec[0])
+        flag = Code.split('!')[0][-1]
+        print('FLAG::', flag)
+        if flag == 'h':
+            midCode = hexdecrypter(Code)
+            print('midCode::', midCode)
+            Text = decrypter(midCode, False)
+        else:
+            Text = decrypter(Code, False)
+        if type(Text) == type(('2',)):
+            cleartext()
+            TextBox.insert('1.0', Text[0])
+            TextStatus.set(liblang.Msg_Stat_Dec[1])
+            Message.set(liblang.Time_Encrypted + Text[1])
+            TimeUsed.set(str(Text[2]) + liblang.Time_Encryption) 
+        else:
+            cleartext()
+            TextStatus.set(liblang.Msg_Stat_Dec[0])
 
 def about(*args):
     cleartext()
@@ -125,6 +135,7 @@ class Settings():
                 from Lang import en_US as liblang
             else:
                 from Lang import zh_CN as liblang
+                
         except:
             file = open('options', 'w')
             lang = 'Language' + '=' + Default.lang
@@ -190,9 +201,14 @@ class Settings():
 
 Settings()
 
+if omode == 'Hex':
+    title_mode = liblang.Lbl_set_Label[3]
+else:
+    title_mode = liblang.Lbl_set_Label[2]
+
 ### Basic Window ###
 root = tkinter.Tk()
-root.title(liblang.Title)
+root.title(liblang.Title + ' - ' + title_mode + ' ' + liblang.Lbl_set_Label[1])
 root.resizable(False, False)
 
 y = root.winfo_screenheight()/2 - 250
