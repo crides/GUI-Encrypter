@@ -15,7 +15,7 @@ from gi.repository import Gtk, Gdk, Notify
 def event_esc_exit(widget, event, window=None):
     if event.keyval == Gdk.keyval_from_name('Escape'):
         window.destroy()
-        if window.get_title() == 'Encrypter':
+        if window.get_title() == liblang.Title:
             Gtk.main_quit()
 
 def quit_window(button, window):
@@ -60,7 +60,7 @@ def about_program(button):
     aboutdialog.set_program_name('GEncrypter')
     aboutdialog.set_version('3.0')
     aboutdialog.set_copyright('Copyright © 2012-2014 Jingye Zhang\nCopyright © 2014-2015 Haoqing Zhu')
-    aboutdialog.set_comments('Encrypt your texts and strings')
+    aboutdialog.set_comments(liblang.Abt_Comment)
     aboutdialog.set_license(GPL_License)
     aboutdialog.set_wrap_license(True)
     aboutdialog.set_authors(['Jingye Zhang', 'Haoqing Zhu'])
@@ -228,8 +228,8 @@ class Settings():
         
         option_boxBtn = Gtk.Box()
         option_boxGeneral.pack_end(option_boxBtn, True, False, 3)
-        btnApply = Gtk.Button('Apply')
-        btnClose = Gtk.Button('OK')
+        btnApply = Gtk.Button(liblang.Lbl_set_Btn[0])
+        btnClose = Gtk.Button(liblang.Lbl_set_Btn[1])
         btnApply.connect('clicked', self.applyset, self)
         btnClose.connect('clicked', quit_window, optionwin)
         option_boxBtn.pack_start(btnApply, False, False, 0)
@@ -333,8 +333,8 @@ class MainWindow(Gtk.Window):
         align.set_padding(2, 0, 10, 0)
 
         Lbltextbox = Gtk.Label()
-        Lbltextbox.set_markup('<b>Text Box</b>')
-        Lbltextbox.set_tooltip_text('Text Box for Encryption and Decryption')
+        Lbltextbox.set_markup('<b>%s</b>' % liblang.Lbl_Label[0])
+        Lbltextbox.set_tooltip_text(liblang.Tooltip[0])
         boxGeneral.pack_start(align, False, False, 0)
         align.add(Lbltextbox)
 
@@ -366,13 +366,13 @@ class MainWindow(Gtk.Window):
         LblMsg = Gtk.Label()
         LblTimeUsed = Gtk.Label()
 
-        LblStat.set_markup('<span font="Ubuntu Mono 12">Status</span>')
-        LblMsg.set_markup('<span font="Ubuntu Mono 12">Message</span>')
-        LblTimeUsed.set_markup('<span font="Ubuntu Mono 12">Time Used</span>')
+        LblStat.set_markup('<span font="Ubuntu Mono 12">%s</span>' % liblang.Lbl_Label[1])
+        LblMsg.set_markup('<span font="Ubuntu Mono 12">%s</span>' % liblang.Lbl_Label[2])
+        LblTimeUsed.set_markup('<span font="Ubuntu Mono 12">%s</span>' % liblang.Lbl_Label[3])
 
-        LblStat.set_tooltip_text('Indicate the status of the Encrypter')
-        LblMsg.set_tooltip_text('For extra output messages like Error')
-        LblTimeUsed.set_tooltip_text('Time usage of the process')
+        LblStat.set_tooltip_text(liblang.Tooltip[1])
+        LblMsg.set_tooltip_text(liblang.Tooltip[2])
+        LblTimeUsed.set_tooltip_text(liblang.Tooltip[3])
 
         self.StrVarStat = Gtk.Label()
         self.StrVarMsg = Gtk.Label()
@@ -391,15 +391,15 @@ class MainWindow(Gtk.Window):
         boxBtn = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
         boxGeneral.pack_start(boxBtn, False, False, 2)
 
-        btnEncrypt = Gtk.Button('E_ncrypt', None, True)
-        btnDecrypt = Gtk.Button('_Decrypt', None, True)
-        btnClear = Gtk.Button('_Clear', None, True)
-        btnAbout = Gtk.Button('About', None, True)
+        btnEncrypt = Gtk.Button(liblang.Lbl_Btn[0], None, True)
+        btnDecrypt = Gtk.Button(liblang.Lbl_Btn[1], None, True)
+        btnClear = Gtk.Button(liblang.Lbl_Btn[2], None, True)
+        btnAbout = Gtk.Button(liblang.Lbl_Btn[3], None, True)
 
-        btnEncrypt.set_tooltip_text('Encrypt Text')
-        btnDecrypt.set_tooltip_text('Decrypt Text')
-        btnClear.set_tooltip_text('Clear Status & Text')
-        btnAbout.set_tooltip_text('Show About Text')
+        btnEncrypt.set_tooltip_text(liblang.Tooltip[4])
+        btnDecrypt.set_tooltip_text(liblang.Tooltip[5])
+        btnClear.set_tooltip_text(liblang.Tooltip[6])
+        btnAbout.set_tooltip_text(liblang.Tooltip[7])
 
         btnEncrypt.connect('clicked', encrypt, self)
         btnDecrypt.connect('clicked', decrypt, self)
@@ -421,7 +421,7 @@ else:
 
 program_icon_name = 'emblem-readonly'
 
-show_notification('Program Started!')
+show_notification(liblang.notification)
 
 win = MainWindow()
 win.InitUI()
