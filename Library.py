@@ -10,8 +10,6 @@
 #   uc3             Intermediate Encryption Funtion
 #   un3             Intermediate Decryption Funtion
 
-
-
 import time
 from math import floor
 from random import random
@@ -29,7 +27,7 @@ def scale(cur, res, num):
     Float = False
     Positive = True
 
-    # From
+    # Input
     if cur > 62 or res > 62: Defined = False
     if num.count('.') == 1:
         Float =True
@@ -69,7 +67,7 @@ def scale(cur, res, num):
             digitnum = 0
             digit = 0
 
-    # To
+    # Output
     if res != 10:
         strdigit = ''
         for i in range(1, 17):
@@ -119,7 +117,7 @@ def reverse(string):
     return reversedd
 
 def encrypter(string, mode):
-##    try:
+    try:
         startTime = str(int(time.time()*1000))
         part1 = startTime[10:13]
         part2 = string
@@ -146,14 +144,13 @@ def encrypter(string, mode):
         endTime = int(time.time()*1000)
         TimeUsed = int(endTime) - int(startTime)
         return retn, TimeUsed
-##    except:
-##        e = Exception()
-##        return e
+    except:
+        pass
 
 def decrypter(code, checksum):
-##    try:
+    try:
         startTime = int(time.time()*1000)
-        code = code[1:-1].split('!')
+        code = code[1:].split('!')
         if code[0][-1] == 'h'\
         or code[0][-1] == 'n':
             code[0] = code[0][:-1]
@@ -174,46 +171,54 @@ def decrypter(code, checksum):
         if not checksum:
             ecttime = str(dctpart4) + str(dctpart6) + str(dctpart1)
             tc = time.ctime(float(ecttime[0:10])).split(' ')
-            date = tc[4] + ' ' + tc[1] + ' ' + tc[2] + ' ' + tc[3]
+            date = ' '.join((tc[4], tc[1], tc[2], tc[3]))
             retn = dctpart2, date, needtime
         return retn
+    except:
+        pass
 
 def hexencrypter(code):
-    string = code.split('!')
-    code1 = string[0]
-    code3 = string[2]
-    stringlist = string[1].split(',')
-    hexcode = ''
-    for HEX in stringlist:
-        hexcode += '÷'
-        if HEX[0] == '-':
-            hexcode += '-'
-            HEX = HEX[1:]
-        if count(HEX) % 2 == 1:
-            HEX = '0' + HEX
-        for i in range(0, count(HEX), 2):
-            hexcode += chr(int(HEX[i:i+2], 16))
-    hexcode = hexcode[1:]
-    code1 += 'h'
-    result = '!'.join((code1, hexcode, code3))
-    return result
+	try:
+		string = code.split('!')
+		code1 = string[0]
+		code3 = string[2]
+		stringlist = string[1].split(',')
+		hexcode = ''
+		for HEX in stringlist:
+			hexcode += '÷'
+			if HEX[0] == '-':
+				hexcode += '-'
+				HEX = HEX[1:]
+			if count(HEX) % 2 == 1:
+				HEX = '0' + HEX
+			for i in range(0, count(HEX), 2):
+				hexcode += chr(int(HEX[i:i+2], 16))
+		hexcode = hexcode[1:]
+		code1 += 'h'
+		result = '!'.join((code1, hexcode, code3))
+		return result
+	except:
+		pass
 
 def hexdecrypter(hcode):
-    hexcode = hcode.split('!')
-    code1 = hexcode[0][:-1]
-    code3 = hexcode[2]
-    HEXlist = hexcode[1].split('÷')
-    string = ''
-    for HEX in HEXlist:
-        string += ','
-        if HEX[0] == '-':
-            string += '-'
-            HEX = HEX[1:]
-        for i in HEX:
-            string += hex(ord(i))[2:]
-    string = string[1:]
-    result = '!'.join((code1, string, code3))
-    return result
+	try:
+		hexcode = hcode.split('!')
+		code1 = hexcode[0][:-1]
+		code3 = hexcode[2]
+		HEXlist = hexcode[1].split('÷')
+		string = ''
+		for HEX in HEXlist:
+			string += ','
+			if HEX[0] == '-':
+				string += '-'
+				HEX = HEX[1:]
+			for i in HEX:
+				string += hex(ord(i))[2:]
+		string = string[1:]
+		result = '!'.join((code1, string, code3))
+		return result
+	except:
+		pass
 
 def uc3(this, utc, it):
     retn = ''
@@ -236,10 +241,8 @@ def un3(this, utc, it):
     tmmp = this.split(',')
     for i in range(count(tmmp)):
         if i%2 != 0:
-            print('tmmp15::', (int(tmmp[i], 15) - utc + int(i)), chr(int(tmmp[i], 15) - utc + int(i)))
             retn += chr(int(tmmp[i], 15) - utc + int(i))
         else:
-            print('tmmp12::', (int(tmmp[i], 12) - utc + int(i)), chr(int(tmmp[i], 12) + int(it) - i))
             retn += chr(int(tmmp[i], 12) + int(it) - i)
     return retn
 
