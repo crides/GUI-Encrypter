@@ -1,42 +1,47 @@
 #!/usr/bin/python3.4
 # -*- coding: utf-8 -*-
 ### GUI Encrypter by Zhu Haoqing(Originally Zhang Jingye) ###
-### Rev: 3.0
+### Rev: 4.0
 ### Runtime Environment: Python3.4
 ### Hexage Mode added
+### Auto Copy after process added
+### Time bugs fixed
 
 import Lang
-import Library
 from Library import *
-import os
-import time
+import os, sys
 from gi.repository import Gtk, Gdk, Notify
 
 def event_esc_exit(widget, event, window=None):
     if event.keyval == Gdk.keyval_from_name('Escape'):
         window.destroy()
-        if window.get_title() == liblang.Title:
+        if liblang.Title in window.get_title():
             Gtk.main_quit()
 
 def quit_window(button, window):
     window.destroy()
 
 def Restart():
-    Gtk.main_quit()
-    os.system('sh restart.sh')
-    
-def clipboard_callback(button, action):
+    current = sys.executable
+    os.execl(current, current, *sys.argv)
+
+def clipboard_callback(button, action, self):
     clipboard = Gtk.Clipboard.get(Gdk.SELECTION_CLIPBOARD)
     if action == 'copy':
-        TextBox_buffer.copy_clipboard(clipboard)
+        self.TextBox_buffer.copy_clipboard(clipboard)
     elif action == 'cut':
-        TextBox_buffer.cut_clipboard(clipboard, True)
+        self.TextBox_buffer.cut_clipboard(clipboard, True)
     elif action == 'paste':
-        TextBox_buffer.paste_clipboard(clipboard, None, True)
+        self.TextBox_buffer.paste_clipboard(clipboard, None, True)
+    elif action == 'auto_copy':
+        text_start, text_end = self.TextBox_buffer.get_bounds()
+        text = self.TextBox_buffer.get_text(text_start, text_end, True)[:-1]
+        clipboard.set_text(text, -1)
+        show_notification('String copied into clipboard.')
 
-def selectall(button):
-    sel_start, sel_end = TextBox_buffer.get_bounds()
-    TextBox_buffer.select_range(sel_start, sel_end)
+def selectall(button, self):
+    sel_start, sel_end = self.TextBox_buffer.get_bounds()
+    self.TextBox_buffer.select_range(sel_start, sel_end)
 
 def showhelp(button):
     helpwin = Gtk.Window()
@@ -47,23 +52,25 @@ def showhelp(button):
     helpwin.set_border_width(10)
     helpwin.set_resizable(False)
     helpwin.connect('key_press_event', event_esc_exit, helpwin)
-    
+
     helplabel = Gtk.Label(liblang.HELP.__doc__)
     helplabel.set_line_wrap(True)
     helplabel.set_max_width_chars(30)
-    helpwin.add(helplabel) 
+    helpwin.add(helplabel)
     helpwin.show_all()
 
 def about_program(button):
     GPL_License = open('GPL_License').read()
     aboutdialog = Gtk.AboutDialog(win)
     aboutdialog.set_program_name('GEncrypter')
-    aboutdialog.set_version('3.0')
-    aboutdialog.set_copyright('Copyright © 2012-2014 Jingye Zhang\nCopyright © 2014-2015 Haoqing Zhu')
+    aboutdialog.set_version('4.0')
+    aboutdialog.set_copyright('Copyright © 2012-2014 Jingye Zhang\nCopyright © 2014-2016 Haoqing Zhu')
     aboutdialog.set_comments(liblang.Abt_Comment)
     aboutdialog.set_license(GPL_License)
     aboutdialog.set_wrap_license(True)
-    aboutdialog.set_authors(['Jingye Zhang', 'Haoqing Zhu'])
+    aboutdialog.set_authors(['<a href="https://github.com/zhangjingye03">Jingye Zhang</a>', '<a href="https://github.com/Irides-Chromium">Haoqing Zhu</a>'])
+    aboutdialog.set_website('https://github.com/Irides-Chromium/GUI-Encrypter')
+    aboutdialog.set_website_label('Github project repository')
     aboutdialog.set_logo_icon_name(program_icon_name)
     aboutdialog.set_transient_for(win)
     aboutdialog.run()
@@ -79,11 +86,11 @@ def set_text_mono(label, text):
 
 def encrypt(button, self):
     text_start, text_end = self.TextBox_buffer.get_bounds()
-    Text = self.TextBox_buffer.get_text(text_start, text_end, True)[:-1]
+    Text = self.TextBox_buffer.get_text(text_start, text_end, True)
     if Text == ''\
     or Text == '\n'\
     or Text == ' ':
-        cleartext(self=self)
+        cleartext(None, self, False)
         set_text_mono(self.StrVarMsg, liblang.Msg_ERR)
     else:
         ect_str = encrypter(Text, omode)
@@ -91,15 +98,16 @@ def encrypt(button, self):
         needtime = ect_str[1]
         dct_str = decrypter(ect_str, True)
         if dct_str != Text:
-            cleartext(self=self)
+            cleartext(None, self, False)
             set_text_mono(self.StrVarStat, liblang.Msg_Stat_Enc[0])
         else:
             if omode == 'Hex':
                 ect_str = hexencrypter(ect_str)
-            cleartext(self=self)
+            cleartext(None, self, False)
             set_text_mono(self.StrVarStat, liblang.Msg_Stat_Enc[1])
             set_text_mono(self.StrVarTimeUsed, str(needtime) + liblang.Time_Encryption)
             self.TextBox_buffer.set_text(ect_str)
+            clipboard_callback(None, 'auto_copy', self)
 
 def decrypt(button, self):
     text_start, text_end = self.TextBox_buffer.get_bounds()
@@ -108,7 +116,7 @@ def decrypt(button, self):
     or ect_str == '\n'\
     or ect_str == ' '\
     or ect_str[0] != '~':
-        cleartext(self=self)
+        cleartext(None, self, True)
         set_text_mono(self.StrVarMsg, liblang.Msg_ERR)
     else:
         flag = ect_str.split('!')[0][-1]
@@ -118,30 +126,31 @@ def decrypt(button, self):
         else:
             Text = decrypter(ect_str, False)
         if type(Text) == type(('2',)):
-            cleartext(self=self)
+            cleartext(None, self, False)
             self.TextBox_buffer.set_text(Text[0])
             set_text_mono(self.StrVarStat, liblang.Msg_Stat_Dec[1])
             set_text_mono(self.StrVarMsg, liblang.Time_Encrypted + Text[1])
-            set_text_mono(self.StrVarTimeUsed, str(Text[2]) + liblang.Time_Encryption) 
+            set_text_mono(self.StrVarTimeUsed, str(Text[2]) + liblang.Time_Encryption)
+            clipboard_callback(None, 'auto_copy', self)
         else:
-            cleartext(self=self)
+            cleartext(None, self, False)
             set_text_mono(self.StrVarStat, liblang.Msg_Stat_Dec[0])
 
-def cleartext(button=None, self=None):
+def cleartext(button, self, not_with_text):
     self.StrVarStat.set_text('')
     self.StrVarMsg.set_text('')
     self.StrVarTimeUsed.set_text('')
-    self.TextBox_buffer.set_text('')
+    if not_with_text == False:
+        self.TextBox_buffer.set_text('')
 
 def about(button=None, self=None):
-    cleartext(self=self)
+    cleartext(None, self, False)
     self.TextBox_buffer.set_text(liblang.ABOUT.__doc__)
 
 class Settings():
-    
-    mode_set = False
-    lang_set = False
-    
+
+    set_stat = False
+
     def __init__(self):
         try:
             file = open('options')
@@ -157,7 +166,7 @@ class Settings():
             global olang, omode, liblang
             olang = settings.get('Language')
             omode = settings.get('Mode')
-            
+
             if olang == 'en_US':
                 from Lang import en_US as liblang
             else:
@@ -171,33 +180,35 @@ class Settings():
             file.close()
 
     def lang_register(widget, self):
-        self.lang_set = True
+        self.set_stat = True
         global olang
         if widget.get_label() == 'English':
             olang = 'en_US'
         else:
             olang = 'zh_CN'
+
     def mode_register(widget, self):
-        self.mode_set = True
+        self.set_stat = True
         global omode
         if widget.get_label() == liblang.Lbl_set_Label[2]:
             omode = 'Normal'
         else:
             omode = 'Hex'
-        
+
     def SettingDialog(button, self):
-        optionwin = Gtk.Window(Gtk.WindowType.TOPLEVEL)
+        optionwin = Gtk.Window()
         optionwin.set_title(liblang.Menu_Edit_[4])
-        optionwin.set_default_size(250, -1)
+        optionwin.set_resizable(False)
+        optionwin.set_size_request(200, -1)
         optionwin.set_transient_for(win)
         optionwin.set_position(Gtk.WindowPosition.CENTER_ON_PARENT)
         optionwin.set_modal(True)
         optionwin.set_destroy_with_parent(True)
         optionwin.set_border_width(10)
         optionwin.connect('key_press_event', event_esc_exit, optionwin)
-        
+
         option_boxGeneral = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
-        
+
         option_frameLang = Gtk.Frame(label=liblang.Lbl_set_Label[0])
         option_boxGeneral.pack_start(option_frameLang, True, True, 5)
         option_boxLangb = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
@@ -207,14 +218,16 @@ class Settings():
         eng = Gtk.RadioButton(label='English')
         chn = Gtk.RadioButton(group=eng, label='中文')
         eng.connect('toggled', self.lang_register, self)
-        chn.connect('toggled', self.lang_register, self)        
+        chn.connect('toggled', self.lang_register, self)
         option_boxLangs.pack_start(eng, True, True, 0)
         option_boxLangs.pack_end(chn, True, True, 0)
-        
+
         note = Gtk.Label(liblang.set_Note)
         note.set_line_wrap(True)
+        note.set_max_width_chars(30)
+        note.set_single_line_mode(False)
         option_boxLangb.pack_start(note, True, True, 5)
-        
+
         option_frameMode = Gtk.Frame(label=liblang.Lbl_set_Label[1])
         option_boxGeneral.pack_start(option_frameMode, True, True, 5)
         option_boxMode = Gtk.Box()
@@ -225,7 +238,7 @@ class Settings():
         hexmode.connect('toggled', self.mode_register, self)
         option_boxMode.pack_start(nrm, True, True, 0)
         option_boxMode.pack_start(hexmode, True, True, 0)
-        
+
         option_boxBtn = Gtk.Box()
         option_boxGeneral.pack_end(option_boxBtn, True, False, 3)
         btnApply = Gtk.Button(liblang.Lbl_set_Btn[0])
@@ -234,19 +247,18 @@ class Settings():
         btnClose.connect('clicked', quit_window, optionwin)
         option_boxBtn.pack_start(btnApply, False, False, 0)
         option_boxBtn.pack_end(btnClose, False, False, 0)
-        
 
         if olang == 'en_US':eng.set_active(True)
         else:chn.set_active(True)
         if omode == 'Normal':nrm.set_active(True)
         else:hexmode.set_active(True)
-        
+
+        self.set_stat = False
         optionwin.add(option_boxGeneral)
         optionwin.show_all()
-        
+
     def applyset(button, self):
-        print(self.mode_set, self.lang_set)
-        if self.mode_set or self.lang_set:
+        if self.set_stat:
             file = open('options', 'w')
             lang = 'Language' + '=' + olang
             mode = 'Mode' + '=' + omode
@@ -254,18 +266,17 @@ class Settings():
             file.close()
             Settings()
             Restart()
-        
+
 class MainWindow(Gtk.Window):
-    
+
     def InitUI(self):
         ### Basic Window ###
         self.set_title(liblang.Title + ' - ' + title_mode + ' ' + liblang.Lbl_set_Label[1])
         self.set_icon_name(program_icon_name)
         self.set_resizable(False)
-        self.set_size_request(450, 558)
+        self.set_size_request(400, 500)
         self.set_position(Gtk.WindowPosition.CENTER)
         self.set_border_width(10)
-
         self.connect('key_press_event', event_esc_exit, win)
 
         ### General Box ###
@@ -289,10 +300,10 @@ class MainWindow(Gtk.Window):
         menu_separater = Gtk.SeparatorMenuItem()
         preference_submenu = Gtk.Action(liblang.Menu_Edit_[4], '_' + liblang.Menu_Edit_[4], None, None).create_menu_item()
 
-        copy_submenu.connect('activate', clipboard_callback, 'copy')
-        cut_submenu.connect('activate', clipboard_callback, 'cut')
-        paste_submenu.connect('activate', clipboard_callback, 'paste')
-        selectall_submenu.connect('activate', selectall)
+        copy_submenu.connect('activate', clipboard_callback, 'copy', self)
+        cut_submenu.connect('activate', clipboard_callback, 'cut', self)
+        paste_submenu.connect('activate', clipboard_callback, 'paste', self)
+        selectall_submenu.connect('activate', selectall, self)
         preference_submenu.connect('activate', Settings.SettingDialog, Settings)
 
         preference_submenu.add_accelerator('activate', accelgroup, Gdk.keyval_from_name('P'), Gdk.ModifierType.CONTROL_MASK | Gdk.ModifierType.MOD1_MASK, Gtk.AccelFlags.VISIBLE)
@@ -403,7 +414,7 @@ class MainWindow(Gtk.Window):
 
         btnEncrypt.connect('clicked', encrypt, self)
         btnDecrypt.connect('clicked', decrypt, self)
-        btnClear.connect('clicked', cleartext, self)
+        btnClear.connect('clicked', cleartext, self, False)
         btnAbout.connect('clicked', about, self)
 
         boxBtn.pack_start(btnEncrypt, True, True, 0)
@@ -412,6 +423,7 @@ class MainWindow(Gtk.Window):
         boxBtn.pack_start(btnAbout, True, True, 0)
         boxBtn.set_homogeneous(True)
 
+### Program ###
 global olang, omode, liblang
 Settings()
 if omode == 'Hex':
