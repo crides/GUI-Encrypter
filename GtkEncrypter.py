@@ -1,4 +1,4 @@
-#!/usr/bin/python3.4
+#!/usr/bin/python3
 # -*- coding: utf-8 -*-
 ### GUI Encrypter by Zhu Haoqing(Originally Zhang Jingye) ###
 ### Rev: 4.0
@@ -10,6 +10,11 @@
 import Lang
 from Library import *
 import os, sys
+import gi
+
+gi.require_version('Gtk', '3.0')
+gi.require_version('Notify', '0.7')
+
 from gi.repository import Gtk, Gdk, Notify
 
 def event_esc_exit(widget, event, window=None):
