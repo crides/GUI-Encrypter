@@ -3,7 +3,7 @@ A Desktop application which is used to encrypt and decrypt texts and ciphers. (O
 Note: The new version is not that stable, sometimes the encryption and decryption will have some errors and the characters will not be the same.
 
 This is a program which is used to encrypt and decrypt strings written by Zhu Haoqing. The Program is originally written by zhangjingye (Github: zhangjingye03) in JavaScript, translated by zhuhaoqing (Github: Irides-Chromium) into Python3.
-CopyRight (C) 2015.10.1-12.31
+CopyRight (C) 2014 ~ 2016
 All Rights Reserved.
 
 Author: Zhangjingye
