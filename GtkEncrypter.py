@@ -3,7 +3,7 @@
 # -*- coding: utf-8 -*-
 ### GUI Encrypter by Zhu Haoqing(Originally Zhang Jingye) ###
 ### Rev: 4.0
-### Runtime Environment: Python3.4
+### Runtime Environment: Python3
 ### Hexage Mode added
 ### Auto Copy after process added
 ### Time bugs fixed
