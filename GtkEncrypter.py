@@ -33,7 +33,6 @@ class Settings():
                 j = i.split('=')
                 settings[j[0]] = j[1]
             file.close()
-            global olang, omode, liblang
             olang = settings.get('Language')
             omode = settings.get('Mode')
 
@@ -42,12 +41,20 @@ class Settings():
             else:
                 from Lang import zh_CN as liblang
 
+            self.olang = olang
+            self.omode = omode
+            self.liblang = liblang
         except:
             file = open('options', 'w')
             olang = 'Language' + '=' + Default.lang
             omode = 'Mode' + '=' + Default.mode
+            from Lang import en_US as liblang
             file.write('\n'.join((lang, mode)))
             file.close()
+
+            self.olang = olang
+            self.omode = omode
+            self.liblang = liblang
 
     def lang_register(widget, self):
         self.set_stat = True
@@ -75,7 +82,7 @@ class Settings():
         optionwin.set_modal(True)
         optionwin.set_destroy_with_parent(True)
         optionwin.set_border_width(10)
-        optionwin.connect('key_press_event', event_esc_exit, optionwin)
+        optionwin.connect('key_press_event', event_esc_exit, liblang, optionwin)
 
         option_boxGeneral = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
 
@@ -147,7 +154,7 @@ class MainWindow(Gtk.Window):
         self.set_size_request(400, 500)
         self.set_position(Gtk.WindowPosition.CENTER)
         self.set_border_width(10)
-        self.connect('key_press_event', event_esc_exit, win)
+        self.connect('key_press_event', event_esc_exit, liblang, win)
 
         ### General Box ###
         boxGeneral = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
@@ -294,8 +301,11 @@ class MainWindow(Gtk.Window):
         boxBtn.set_homogeneous(True)
 
 ### Program ###
-global olang, omode, liblang
-Settings()
+Set = Settings()
+omode = Set.omode
+olang = Set.olang
+liblang = Set.liblang
+
 if omode == 'Hex':
     title_mode = liblang.Lbl_set_Label[3]
 else:
