@@ -21,7 +21,7 @@ from gi.repository import Gtk, Gdk, Notify
 
 program_icon_name = 'emblem-readonly'
 
-def event_esc_exit(widget, event, window=None):
+def event_esc_exit(widget, event, liblang, window=None):
     if event.keyval == Gdk.keyval_from_name('Escape'):
         window.destroy()
         if liblang.Title in window.get_title():
@@ -89,6 +89,7 @@ def show_notification(message):
     Notify.init('GEncrypter')
     notification = Notify.Notification.new('GEncrypter', message, program_icon_name)
     notification.show()
+
 def scale(cur, res, num):
 # Default Settings
     cur = int(cur)
