@@ -1,4 +1,5 @@
 #!/usr/bin/python3.4
+# -*- coding: UTF-8 -*-
 
 class en_US():
     Title = 'GEncrypter' 

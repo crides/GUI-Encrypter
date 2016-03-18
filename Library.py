@@ -13,6 +13,82 @@
 import time
 from math import floor
 from random import random
+import os, sys
+import gi
+gi.require_version('Gtk', '3.0')
+gi.require_version('Notify', '0.7')
+from gi.repository import Gtk, Gdk, Notify
+
+program_icon_name = 'emblem-readonly'
+
+def event_esc_exit(widget, event, liblang, window=None):
+    if event.keyval == Gdk.keyval_from_name('Escape'):
+        window.destroy()
+        if liblang.Title in window.get_title():
+            Gtk.main_quit()
+
+def quit_window(button, window):
+    window.destroy()
+
+def Restart():
+    current = sys.executable
+    os.execl(current, current, *sys.argv)
+
+def clipboard_callback(button, action, self):
+    clipboard = Gtk.Clipboard.get(Gdk.SELECTION_CLIPBOARD)
+    if action == 'copy':
+        self.TextBox_buffer.copy_clipboard(clipboard)
+    elif action == 'cut':
+        self.TextBox_buffer.cut_clipboard(clipboard, True)
+    elif action == 'paste':
+        self.TextBox_buffer.paste_clipboard(clipboard, None, True)
+    elif action == 'auto_copy':
+        text_start, text_end = self.TextBox_buffer.get_bounds()
+        text = self.TextBox_buffer.get_text(text_start, text_end, True)[:-1]
+        clipboard.set_text(text, -1)
+        show_notification('String copied into clipboard.')
+
+def selectall(button, self):
+    sel_start, sel_end = self.TextBox_buffer.get_bounds()
+    self.TextBox_buffer.select_range(sel_start, sel_end)
+
+def showhelp(button):
+    helpwin = Gtk.Window()
+    helpwin.set_transient_for(win)
+    helpwin.set_title(liblang.Menu_Help)
+    helpwin.set_position(Gtk.WindowPosition.CENTER_ON_PARENT)
+    helpwin.set_destroy_with_parent(True)
+    helpwin.set_border_width(10)
+    helpwin.set_resizable(False)
+    helpwin.connect('key_press_event', event_esc_exit, helpwin)
+
+    helplabel = Gtk.Label(liblang.HELP.__doc__)
+    helplabel.set_line_wrap(True)
+    helplabel.set_max_width_chars(30)
+    helpwin.add(helplabel)
+    helpwin.show_all()
+
+def about_program(button):
+    GPL_License = open('GPL_License').read()
+    aboutdialog = Gtk.AboutDialog(win)
+    aboutdialog.set_program_name('GEncrypter')
+    aboutdialog.set_version('4.0')
+    aboutdialog.set_copyright('Copyright © 2012-2014 Jingye Zhang\nCopyright © 2014-2016 Haoqing Zhu')
+    aboutdialog.set_comments(liblang.Abt_Comment)
+    aboutdialog.set_license(GPL_License)
+    aboutdialog.set_wrap_license(True)
+    aboutdialog.set_authors(['<a href="https://github.com/zhangjingye03">Jingye Zhang</a>', '<a href="https://github.com/Irides-Chromium">Haoqing Zhu</a>'])
+    aboutdialog.set_website('https://github.com/Irides-Chromium/GUI-Encrypter')
+    aboutdialog.set_website_label('Github project repository')
+    aboutdialog.set_logo_icon_name(program_icon_name)
+    aboutdialog.set_transient_for(win)
+    aboutdialog.run()
+    aboutdialog.destroy()
+
+def show_notification(message):
+    Notify.init('GEncrypter')
+    notification = Notify.Notification.new('GEncrypter', message, program_icon_name)
+    notification.show()
 
 def scale(cur, res, num):
 # Default Settings
@@ -245,6 +321,72 @@ def un3(this, utc, it):
         else:
             retn += chr(int(tmmp[i], 12) + int(it) - i)
     return retn
+
+def set_text_mono(label, text):
+    label.set_markup('<span font="Ubuntu Mono 12">%s</span>' % text)
+
+def encrypt(button, self):
+    text_start, text_end = self.TextBox_buffer.get_bounds()
+    Text = self.TextBox_buffer.get_text(text_start, text_end, True)
+    if Text == ''\
+    or Text == '\n'\
+    or Text == ' ':
+        cleartext(None, self, False)
+        set_text_mono(self.StrVarMsg, liblang.Msg_ERR)
+    else:
+        ect_str = encrypter(Text, omode)
+        ect_str = ect_str[0]
+        needtime = ect_str[1]
+        dct_str = decrypter(ect_str, True)
+        if dct_str != Text:
+            cleartext(None, self, False)
+            set_text_mono(self.StrVarStat, liblang.Msg_Stat_Enc[0])
+        else:
+            if omode == 'Hex':
+                ect_str = hexencrypter(ect_str)
+            cleartext(None, self, False)
+            set_text_mono(self.StrVarStat, liblang.Msg_Stat_Enc[1])
+            set_text_mono(self.StrVarTimeUsed, str(needtime) + liblang.Time_Encryption)
+            self.TextBox_buffer.set_text(ect_str)
+            clipboard_callback(None, 'auto_copy', self)
+
+def decrypt(button, self):
+    text_start, text_end = self.TextBox_buffer.get_bounds()
+    ect_str = self.TextBox_buffer.get_text(text_start, text_end, True)
+    if ect_str == ''\
+    or ect_str == '\n'\
+    or ect_str == ' '\
+    or ect_str[0] != '~':
+        cleartext(None, self, True)
+        set_text_mono(self.StrVarMsg, liblang.Msg_ERR)
+    else:
+        flag = ect_str.split('!')[0][-1]
+        if flag == 'h':
+            midect_str = hexdecrypter(ect_str)
+            Text = decrypter(midect_str, False)
+        else:
+            Text = decrypter(ect_str, False)
+        if type(Text) == type(('2',)):
+            cleartext(None, self, False)
+            self.TextBox_buffer.set_text(Text[0])
+            set_text_mono(self.StrVarStat, liblang.Msg_Stat_Dec[1])
+            set_text_mono(self.StrVarMsg, liblang.Time_Encrypted + Text[1])
+            set_text_mono(self.StrVarTimeUsed, str(Text[2]) + liblang.Time_Encryption)
+            clipboard_callback(None, 'auto_copy', self)
+        else:
+            cleartext(None, self, False)
+            set_text_mono(self.StrVarStat, liblang.Msg_Stat_Dec[0])
+
+def cleartext(button, self, not_with_text):
+    self.StrVarStat.set_text('')
+    self.StrVarMsg.set_text('')
+    self.StrVarTimeUsed.set_text('')
+    if not_with_text == False:
+        self.TextBox_buffer.set_text('')
+
+def about(button=None, self=None):
+    cleartext(None, self, False)
+    self.TextBox_buffer.set_text(liblang.ABOUT.__doc__)
 
 class Default():
     lang = 'en_US'
