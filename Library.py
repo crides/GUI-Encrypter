@@ -172,7 +172,7 @@ def scale(cur, res, num):
                 num = int(floor(num/int(res)))
             num = strdigit
     if error == True:
-        return 'ERROR'
+        raise Exception("ERROR")
     if error == False and Defined == True:
         if Positive == False:
             num = '-' + str(num)
