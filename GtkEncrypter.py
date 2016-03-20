@@ -292,7 +292,7 @@ class MainWindow(Gtk.Window):
         btnEncrypt.connect('clicked', encrypt, self)
         btnDecrypt.connect('clicked', decrypt, self)
         btnClear.connect('clicked', cleartext, self, False)
-        btnAbout.connect('clicked', about, self)
+        btnAbout.connect('clicked', about, self, liblang)
 
         boxBtn.pack_start(btnEncrypt, True, True, 0)
         boxBtn.pack_start(btnDecrypt, True, True, 0)

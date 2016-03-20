@@ -384,7 +384,7 @@ def cleartext(button, self, not_with_text):
     if not_with_text == False:
         self.TextBox_buffer.set_text('')
 
-def about(button=None, self=None):
+def about(button, self, liblang):
     cleartext(None, self, False)
     self.TextBox_buffer.set_text(liblang.ABOUT.__doc__)
 
