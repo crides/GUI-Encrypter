@@ -49,7 +49,7 @@ class Settings():
             olang = 'Language' + '=' + Default.lang
             omode = 'Mode' + '=' + Default.mode
             from Lang import en_US as liblang
-            file.write('\n'.join((lang, mode)))
+            file.write('\n'.join((olang, omode)))
             file.close()
 
             self.olang = olang
@@ -202,8 +202,8 @@ class MainWindow(Gtk.Window):
         menu_separater = Gtk.SeparatorMenuItem()
         about_submenu = Gtk.Action(liblang.Lbl_Btn[3], '_' + liblang.Lbl_Btn[3], None, None).create_menu_item()
 
-        help_submenu.connect('activate', showhelp)
-        about_submenu.connect('activate', about_program)
+        help_submenu.connect('activate', showhelp, win, liblang)
+        about_submenu.connect('activate', about_program, win, liblang)
 
         help_submenu.add_accelerator('activate', accelgroup, Gdk.keyval_from_name('F1'), 0, Gtk.AccelFlags.VISIBLE)
 

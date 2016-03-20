@@ -52,7 +52,7 @@ def selectall(button, self):
     sel_start, sel_end = self.TextBox_buffer.get_bounds()
     self.TextBox_buffer.select_range(sel_start, sel_end)
 
-def showhelp(button):
+def showhelp(button, win, liblang):
     helpwin = Gtk.Window()
     helpwin.set_transient_for(win)
     helpwin.set_title(liblang.Menu_Help)
@@ -60,7 +60,7 @@ def showhelp(button):
     helpwin.set_destroy_with_parent(True)
     helpwin.set_border_width(10)
     helpwin.set_resizable(False)
-    helpwin.connect('key_press_event', event_esc_exit, helpwin)
+    helpwin.connect('key_press_event', event_esc_exit, liblang, helpwin)
 
     helplabel = Gtk.Label(liblang.HELP.__doc__)
     helplabel.set_line_wrap(True)
@@ -68,8 +68,8 @@ def showhelp(button):
     helpwin.add(helplabel)
     helpwin.show_all()
 
-def about_program(button):
-    GPL_License = open('GPL_License').read()
+def about_program(button, win, liblang):
+    GPL_License = open('LICENSE').read()
     aboutdialog = Gtk.AboutDialog(win)
     aboutdialog.set_program_name('GEncrypter')
     aboutdialog.set_version('4.0')
