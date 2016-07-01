@@ -12,8 +12,8 @@ import Lang
 from Library import *
 import gi
 
-gi.require_version('Gtk', '3.0')
-gi.require_version('Notify', '0.7')
+gi.require_version("Gtk", "3.0")
+gi.require_version("Notify", "0.7")
 
 from gi.repository import Gtk, Gdk, Notify
 
@@ -23,66 +23,79 @@ class Settings():
 
     def __init__(self):
         try:
-            file = open('options')
+            file = open("options")
             lines = file.read()
-            if lines == '':
+            if lines == "":
                 raise IOError
             line = lines.splitlines()
             settings = {}
             for i in line:
-                j = i.split('=')
+                j = i.split("=")
                 settings[j[0]] = j[1]
             file.close()
-            olang = settings.get('Language')
-            omode = settings.get('Mode')
+            olang = settings.get("Language")
+            omode = settings.get("Mode")
+            oencode = settings.get("Encoding")
 
-            if olang == 'en_US':
+            if olang == "en_US":
                 from Lang import en_US as liblang
             else:
                 from Lang import zh_CN as liblang
 
             self.olang = olang
             self.omode = omode
+            self.oencode = oencode
             self.liblang = liblang
         except:
-            file = open('options', 'w')
-            olang = 'Language' + '=' + Default.lang
-            omode = 'Mode' + '=' + Default.mode
+            file = open("options", "w")
+            olang = "Language=" + Default.lang
+            omode = "Mode=" + Default.mode
+            oencode = "Encoding=" + Default.encoding
             from Lang import en_US as liblang
-            file.write('\n'.join((olang, omode)))
+            file.write("\n".join((olang, omode, oencode)))
             file.close()
 
             self.olang = olang
             self.omode = omode
+            self.oencode = oencode
             self.liblang = liblang
 
-    def lang_register(widget, self):
+    def lang_register(self, widget):
         self.set_stat = True
         global olang
-        if widget.get_label() == 'English':
-            olang = 'en_US'
+        if widget.get_label() == "English":
+            olang = "en_US"
         else:
-            olang = 'zh_CN'
+            olang = "zh_CN"
 
-    def mode_register(widget, self):
+    def mode_register(self, widget):
         self.set_stat = True
         global omode
         if widget.get_label() == liblang.Lbl_set_Label[2]:
-            omode = 'Normal'
+            omode = "Normal"
         else:
-            omode = 'Hex'
+            omode = "Hex"
 
-    def SettingDialog(button, self):
+    def encode_register(self, widget):
+        self.set_stat = True
+        global oencode
+        if widget.get_label() == "ASCII":
+            oencode = "ASCII"
+        else:
+            oencode = "Unicode"
+
+    def SettingDialog(self, _set):
+        print(type(self))
         optionwin = Gtk.Window()
         optionwin.set_title(liblang.Menu_Edit_[4])
         optionwin.set_resizable(False)
         optionwin.set_size_request(200, -1)
         optionwin.set_transient_for(win)
-        optionwin.set_position(Gtk.WindowPosition.CENTER_ON_PARENT)
+        # optionwin.set_position(Gtk.WindowPosition.CENTER_ON_PARENT)
         optionwin.set_modal(True)
         optionwin.set_destroy_with_parent(True)
         optionwin.set_border_width(10)
-        optionwin.connect('key_press_event', event_esc_exit, liblang, optionwin)
+        optionwin.connect("key_press_event", event_esc_exit, _set, optionwin)
 
         option_boxGeneral = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
 
@@ -92,10 +105,10 @@ class Settings():
         option_frameLang.add(option_boxLangb)
         option_boxLangs = Gtk.Box()
         option_boxLangb.pack_start(option_boxLangs, True, True, 0)
-        eng = Gtk.RadioButton(label='English')
-        chn = Gtk.RadioButton(group=eng, label='中文')
-        eng.connect('toggled', self.lang_register, self)
-        chn.connect('toggled', self.lang_register, self)
+        eng = Gtk.RadioButton(label="English")
+        chn = Gtk.RadioButton(group=eng, label="中文")
+        eng.connect("toggled", self.lang_register, self)
+        chn.connect("toggled", self.lang_register, self)
         option_boxLangs.pack_start(eng, True, True, 0)
         option_boxLangs.pack_end(chn, True, True, 0)
 
@@ -107,54 +120,67 @@ class Settings():
 
         option_frameMode = Gtk.Frame(label=liblang.Lbl_set_Label[1])
         option_boxGeneral.pack_start(option_frameMode, True, True, 5)
+        option_Box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
+        option_frameMode.add(option_Box)
         option_boxMode = Gtk.Box()
-        option_frameMode.add(option_boxMode)
+        option_Box.pack_start(option_boxMode, True, True, 0)
         nrm = Gtk.RadioButton(label=liblang.Lbl_set_Label[2])
         hexmode = Gtk.RadioButton(group=nrm, label=liblang.Lbl_set_Label[3])
-        nrm.connect('toggled', self.mode_register, self)
-        hexmode.connect('toggled', self.mode_register, self)
+        nrm.connect("toggled", self.mode_register, self)
+        hexmode.connect("toggled", self.mode_register, self)
         option_boxMode.pack_start(nrm, True, True, 0)
         option_boxMode.pack_start(hexmode, True, True, 0)
+
+        option_boxEncode = Gtk.Box()
+        option_Box.pack_start(option_boxEncode, True, True, 5)
+        option_Box.add(option_boxEncode)
+        asc = Gtk.RadioButton(label="ASCII")
+        uni = Gtk.RadioButton(label="Unicode", group=asc)
+        asc.connect("toggled", self.encode_register, self)
+        uni.connect("toggled", self.encode_register, self)
+        option_boxMode.pack_start(asc, True, True, 0)
+        option_boxMode.pack_start(uni, True, True, 0)
 
         option_boxBtn = Gtk.Box()
         option_boxGeneral.pack_end(option_boxBtn, True, False, 3)
         btnApply = Gtk.Button(liblang.Lbl_set_Btn[0])
         btnClose = Gtk.Button(liblang.Lbl_set_Btn[1])
-        btnApply.connect('clicked', self.applyset, self)
-        btnClose.connect('clicked', quit_window, optionwin)
+        btnApply.connect("clicked", self.applyset, self)
+        btnClose.connect("clicked", quit_window, optionwin)
         option_boxBtn.pack_start(btnApply, False, False, 0)
         option_boxBtn.pack_end(btnClose, False, False, 0)
 
-        if olang == 'en_US':eng.set_active(True)
+        if olang == "en_US":eng.set_active(True)
         else:chn.set_active(True)
-        if omode == 'Normal':nrm.set_active(True)
+        if omode == "Normal":nrm.set_active(True)
         else:hexmode.set_active(True)
 
         self.set_stat = False
         optionwin.add(option_boxGeneral)
         optionwin.show_all()
 
-    def applyset(button, self):
+    def applyset(self, button):
         if self.set_stat:
-            file = open('options', 'w')
-            lang = 'Language' + '=' + olang
-            mode = 'Mode' + '=' + omode
-            file.write('\n'.join((lang, mode)))
+            file = open("options", "w")
+            lang = "Language=" + olang
+            mode = "Mode=" + omode
+            encode = "Encoding=" + oencode
+            file.write("\n".join((lang, mode, encode)))
             file.close()
             Settings()
             Restart()
 
 class MainWindow(Gtk.Window):
 
-    def InitUI(self):
+    def InitUI(self, _set):
         ### Basic Window ###
-        self.set_title(liblang.Title + ' - ' + title_mode + ' ' + liblang.Lbl_set_Label[1])
+        self.set_title(liblang.Title + " - " + title_mode + " " + liblang.Lbl_set_Label[1])
         self.set_icon_name(program_icon_name)
         self.set_resizable(False)
         self.set_size_request(400, 500)
         self.set_position(Gtk.WindowPosition.CENTER)
         self.set_border_width(10)
-        self.connect('key_press_event', event_esc_exit, liblang, win)
+        self.connect("key_press_event", event_esc_exit, _set, win)
 
         ### General Box ###
         boxGeneral = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
@@ -175,15 +201,18 @@ class MainWindow(Gtk.Window):
         paste_submenu = Gtk.MenuItem(liblang.Menu_Edit_[2])
         selectall_submenu = Gtk.MenuItem(liblang.Menu_Edit_[3])
         menu_separater = Gtk.SeparatorMenuItem()
-        preference_submenu = Gtk.Action(liblang.Menu_Edit_[4], '_' + liblang.Menu_Edit_[4], None, None).create_menu_item()
+        preference_submenu = Gtk.Action(liblang.Menu_Edit_[4], "_" + liblang.Menu_Edit_[4], None, None).create_menu_item()
 
-        copy_submenu.connect('activate', clipboard_callback, 'copy', self)
-        cut_submenu.connect('activate', clipboard_callback, 'cut', self)
-        paste_submenu.connect('activate', clipboard_callback, 'paste', self)
-        selectall_submenu.connect('activate', selectall, self)
-        preference_submenu.connect('activate', Settings.SettingDialog, Settings)
+        copy_submenu.connect("activate", clipboard_callback, "copy")
+        cut_submenu.connect("activate", clipboard_callback, "cut")
+        paste_submenu.connect("activate", clipboard_callback, "paste")
+        selectall_submenu.connect("activate", selectall)
+        preference_submenu.connect("activate", Settings.SettingDialog, _set)
 
-        preference_submenu.add_accelerator('activate', accelgroup, Gdk.keyval_from_name('P'), Gdk.ModifierType.CONTROL_MASK | Gdk.ModifierType.MOD1_MASK, Gtk.AccelFlags.VISIBLE)
+        preference_submenu.add_accelerator("activate", accelgroup, \
+                Gdk.keyval_from_name("P"), \
+                Gdk.ModifierType.CONTROL_MASK \
+                | Gdk.ModifierType.MOD1_MASK, Gtk.AccelFlags.VISIBLE)
 
         sub_edit_menu.append(copy_submenu)
         sub_edit_menu.append(cut_submenu)
@@ -192,26 +221,26 @@ class MainWindow(Gtk.Window):
         sub_edit_menu.append(menu_separater)
         sub_edit_menu.append(preference_submenu)
 
-        edit_menu = Gtk.Action('Edit', '_Edit', None, None).create_menu_item()
+        edit_menu = Gtk.Action("Edit", "_Edit", None, None).create_menu_item()
         menubar.append(edit_menu)
         edit_menu.set_submenu(sub_edit_menu)
 
         # Help Menu #
         sub_help_menu = Gtk.Menu()
-        help_submenu = Gtk.Action(liblang.Menu_Help, '_' + liblang.Menu_Help, None, None).create_menu_item()
+        help_submenu = Gtk.Action(liblang.Menu_Help, "_" + liblang.Menu_Help, None, None).create_menu_item()
         menu_separater = Gtk.SeparatorMenuItem()
-        about_submenu = Gtk.Action(liblang.Lbl_Btn[3], '_' + liblang.Lbl_Btn[3], None, None).create_menu_item()
+        about_submenu = Gtk.Action(liblang.Lbl_Btn[3], "_" + liblang.Lbl_Btn[3], None, None).create_menu_item()
 
-        help_submenu.connect('activate', showhelp, win, liblang)
-        about_submenu.connect('activate', about_program, win, liblang)
+        help_submenu.connect("activate", showhelp, self, _set)
+        about_submenu.connect("activate", about_program, win, _set)
 
-        help_submenu.add_accelerator('activate', accelgroup, Gdk.keyval_from_name('F1'), 0, Gtk.AccelFlags.VISIBLE)
+        help_submenu.add_accelerator("activate", accelgroup, Gdk.keyval_from_name("F1"), 0, Gtk.AccelFlags.VISIBLE)
 
         sub_help_menu.append(help_submenu)
         sub_help_menu.append(menu_separater)
         sub_help_menu.append(about_submenu)
 
-        help_menu = Gtk.Action('Help', '_Help', None, None).create_menu_item()
+        help_menu = Gtk.Action("Help", "_Help", None, None).create_menu_item()
         menubar.append(help_menu)
         help_menu.set_submenu(sub_help_menu)
 
@@ -221,7 +250,7 @@ class MainWindow(Gtk.Window):
         align.set_padding(2, 0, 10, 0)
 
         Lbltextbox = Gtk.Label()
-        Lbltextbox.set_markup('<b>%s</b>' % liblang.Lbl_Label[0])
+        Lbltextbox.set_markup("<b>%s</b>" % liblang.Lbl_Label[0])
         Lbltextbox.set_tooltip_text(liblang.Tooltip[0])
         boxGeneral.pack_start(align, False, False, 0)
         align.add(Lbltextbox)
@@ -254,9 +283,9 @@ class MainWindow(Gtk.Window):
         LblMsg = Gtk.Label()
         LblTimeUsed = Gtk.Label()
 
-        LblStat.set_markup('<span font="Ubuntu Mono 12">%s</span>' % liblang.Lbl_Label[1])
-        LblMsg.set_markup('<span font="Ubuntu Mono 12">%s</span>' % liblang.Lbl_Label[2])
-        LblTimeUsed.set_markup('<span font="Ubuntu Mono 12">%s</span>' % liblang.Lbl_Label[3])
+        LblStat.set_markup("<span font=\"Ubuntu Mono 12\">%s</span>" % liblang.Lbl_Label[1])
+        LblMsg.set_markup("<span font=\"Ubuntu Mono 12\">%s</span>" % liblang.Lbl_Label[2])
+        LblTimeUsed.set_markup("<span font=\"Ubuntu Mono 12\">%s</span>" % liblang.Lbl_Label[3])
 
         LblStat.set_tooltip_text(liblang.Tooltip[1])
         LblMsg.set_tooltip_text(liblang.Tooltip[2])
@@ -289,10 +318,10 @@ class MainWindow(Gtk.Window):
         btnClear.set_tooltip_text(liblang.Tooltip[6])
         btnAbout.set_tooltip_text(liblang.Tooltip[7])
 
-        btnEncrypt.connect('clicked', encrypt, self)
-        btnDecrypt.connect('clicked', decrypt, self)
-        btnClear.connect('clicked', cleartext, self, False)
-        btnAbout.connect('clicked', about, self, liblang)
+        btnEncrypt.connect("clicked", encrypt, self, _set)
+        btnDecrypt.connect("clicked", decrypt, self, _set)
+        btnClear.connect("clicked", cleartext, self, False)
+        btnAbout.connect("clicked", about, self, _set)
 
         boxBtn.pack_start(btnEncrypt, True, True, 0)
         boxBtn.pack_start(btnDecrypt, True, True, 0)
@@ -304,19 +333,20 @@ class MainWindow(Gtk.Window):
 Set = Settings()
 omode = Set.omode
 olang = Set.olang
+oencode = Set.oencode
 liblang = Set.liblang
 
-if omode == 'Hex':
+if omode == "Hex":
     title_mode = liblang.Lbl_set_Label[3]
 else:
     title_mode = liblang.Lbl_set_Label[2]
 
-program_icon_name = 'emblem-readonly'
+program_icon_name = "emblem-readonly"
 
 show_notification(liblang.notification)
 
 win = MainWindow()
-win.InitUI()
-win.connect('delete-event', Gtk.main_quit)
+win.InitUI(Set)
+win.connect("delete-event", Gtk.main_quit)
 win.show_all()
 Gtk.main()
