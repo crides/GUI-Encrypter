@@ -1,3 +1,4 @@
+#!/usr/bin/python3
 #   FUNCTIONS
 
 #   scale           Change Scale for the Number
@@ -19,12 +20,12 @@ gi.require_version("Gtk", "3.0")
 gi.require_version("Notify", "0.7")
 from gi.repository import Gtk, Gdk, Notify
 
-program_icon_name = "emblem-readonly"
+prog_ico_name = "emblem-readonly"
 
-def event_esc_exit(widget, event, _set, window=None):
+def event_esc_exit(widget, event, liblang, window=None):
     if event.keyval == Gdk.keyval_from_name("Escape"):
         window.destroy()
-        if _set.liblang.Title in window.get_title():
+        if liblang.Title in window.get_title():
             Gtk.main_quit()
 
 def quit_window(button, window):
@@ -37,20 +38,20 @@ def Restart():
 def clipboard_callback(self, button, action):
     clipboard = Gtk.Clipboard.get(Gdk.SELECTION_CLIPBOARD)
     if action == "copy":
-        self.TextBox_buffer.copy_clipboard(clipboard)
+        self.textbox_buf.copy_clipboard(clipboard)
     elif action == "cut":
-        self.TextBox_buffer.cut_clipboard(clipboard, True)
+        self.textbox_buf.cut_clipboard(clipboard, True)
     elif action == "paste":
-        self.TextBox_buffer.paste_clipboard(clipboard, None, True)
+        self.textbox_buf.paste_clipboard(clipboard, None, True)
     elif action == "auto_copy":
-        text_start, text_end = self.TextBox_buffer.get_bounds()
-        text = self.TextBox_buffer.get_text(text_start, text_end, True)
+        text_start, text_end = self.textbox_buf.get_bounds()
+        text = self.textbox_buf.get_text(text_start, text_end, True)
         clipboard.set_text(text, -1)
         show_notification("String copied into clipboard.")
 
 def selectall(self, botton):
-    sel_start, sel_end = self.TextBox_buffer.get_bounds()
-    self.TextBox_buffer.select_range(sel_start, sel_end)
+    sel_start, sel_end = self.textbox_buf.get_bounds()
+    self.textbox_buf.select_range(sel_start, sel_end)
 
 def showhelp(button, win, liblang):
     helpwin = Gtk.Window()
@@ -80,15 +81,14 @@ def about_program(button, win, liblang):
     aboutdialog.set_authors(["<a href=\"https://github.com/zhangjingye03\">Jingye Zhang</a>", "<a href=\"https://github.com/Irides-Chromium\">Haoqing Zhu</a>"])
     aboutdialog.set_website("https://github.com/Irides-Chromium/GUI-Encrypter")
     aboutdialog.set_website_label("Github project repository")
-    aboutdialog.set_logo_icon_name(program_icon_name)
+    aboutdialog.set_logo_icon_name(prog_ico_name)
     aboutdialog.set_transient_for(win)
     aboutdialog.run()
     aboutdialog.destroy()
 
 def show_notification(message):
     Notify.init("GEncrypter")
-    notification = Notify.Notification.new("GEncrypter", message, program_icon_name)
-    notification.show()
+    Notify.Notification.new("GEncrypter", message, prog_ico_name).show()
 
 def scale(cur, res, num):
 # Default Settings
@@ -335,8 +335,8 @@ def set_text_mono(label, text):
     label.set_markup("<span font=\"Ubuntu Mono 12\">%s</span>" % text)
 
 def encrypt(button, self, _set):
-    text_start, text_end = self.TextBox_buffer.get_bounds()
-    Text = self.TextBox_buffer.get_text(text_start, text_end, True)
+    text_start, text_end = self.textbox_buf.get_bounds()
+    Text = self.textbox_buf.get_text(text_start, text_end, True)
     if Text == ""\
     or Text == "\n"\
     or Text == " ":
@@ -356,12 +356,12 @@ def encrypt(button, self, _set):
             cleartext(None, self, False)
             set_text_mono(self.StrVarStat, _set.liblang.Msg_Stat_Enc[1])
             set_text_mono(self.StrVarTimeUsed, str(needtime) + _set.liblang.Time_Encryption)
-            self.TextBox_buffer.set_text(ect_str)
+            self.textbox_buf.set_text(ect_str)
             clipboard_callback(None, "auto_copy", self)
 
 def decrypt(button, self, _set):
-    text_start, text_end = self.TextBox_buffer.get_bounds()
-    ect_str = self.TextBox_buffer.get_text(text_start, text_end, True)
+    text_start, text_end = self.textbox_buf.get_bounds()
+    ect_str = self.textbox_buf.get_text(text_start, text_end, True)
     if ect_str == ""\
     or ect_str == "\n"\
     or ect_str == " "\
@@ -377,7 +377,7 @@ def decrypt(button, self, _set):
             Text = decrypter(ect_str, False)
         if type(Text) == type(("2",)):
             cleartext(None, self, False)
-            self.TextBox_buffer.set_text(Text[0])
+            self.textbox_buf.set_text(Text[0])
             set_text_mono(self.StrVarStat, _set.liblang.Msg_Stat_Dec[1])
             set_text_mono(self.StrVarMsg, _set.liblang.Time_Encrypted + Text[1])
             set_text_mono(self.StrVarTimeUsed, str(Text[2]) + _set.liblang.Time_Encryption)
@@ -391,11 +391,11 @@ def cleartext(button, self, not_with_text):
     self.StrVarMsg.set_text("")
     self.StrVarTimeUsed.set_text("")
     if not_with_text == False:
-        self.TextBox_buffer.set_text("")
+        self.textbox_buf.set_text("")
 
 def about(button, self, liblang):
     cleartext(None, self, False)
-    self.TextBox_buffer.set_text(liblang.ABOUT.__doc__)
+    self.textbox_buf.set_text(liblang.ABOUT.__doc__)
 
 class Default():
     lang = "en_US"
