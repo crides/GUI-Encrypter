@@ -22,48 +22,38 @@ from gi.repository import Gtk, Gdk, Notify
 
 prog_ico_name = "emblem-readonly"
 
-def event_esc_exit(widget, event, liblang, window=None):
+def event_esc_exit(window, event, liblang):
     if event.keyval == Gdk.keyval_from_name("Escape"):
         window.destroy()
-        if liblang.Title in window.get_title():
+        if liblang.title in window.get_title():
             Gtk.main_quit()
 
-def quit_window(button, window):
-    window.destroy()
-
-def Restart():
-    current = sys.executable
-    os.execl(current, current, *sys.argv)
-
-def clipboard_callback(self, button, action):
-    clipboard = Gtk.Clipboard.get(Gdk.SELECTION_CLIPBOARD)
+def clipbd_cb(self, button, action):
+    clip = Gtk.Clipboard.get(Gdk.SELECTION_CLIPBOARD)
     if action == "copy":
-        self.textbox_buf.copy_clipboard(clipboard)
+        self.text_buf.copy_clipboard(clip)
     elif action == "cut":
-        self.textbox_buf.cut_clipboard(clipboard, True)
+        self.text_buf.cut_clipboard(clip, True)
     elif action == "paste":
-        self.textbox_buf.paste_clipboard(clipboard, None, True)
+        self.text_buf.paste_clipboard(clip, None, True)
     elif action == "auto_copy":
-        text_start, text_end = self.textbox_buf.get_bounds()
-        text = self.textbox_buf.get_text(text_start, text_end, True)
-        clipboard.set_text(text, -1)
+        clip.set_text(self.text_buf.get_text(*self.text_buf.get_bounds(), True), -1)
         show_notification("String copied into clipboard.")
 
-def selectall(self, botton):
-    sel_start, sel_end = self.textbox_buf.get_bounds()
-    self.textbox_buf.select_range(sel_start, sel_end)
+def selectall(botton, win):
+    win.text_buf.select_range(*win.text_buf.get_bounds())
 
 def showhelp(button, win, liblang):
     helpwin = Gtk.Window()
     helpwin.set_transient_for(win)
-    helpwin.set_title(liblang.Menu_Help)
+    helpwin.set_title(liblang.menu_help)
     helpwin.set_position(Gtk.WindowPosition.CENTER_ON_PARENT)
     helpwin.set_destroy_with_parent(True)
     helpwin.set_border_width(10)
     helpwin.set_resizable(False)
-    helpwin.connect("key_press_event", event_esc_exit, liblang, helpwin)
+    helpwin.connect("key_press_event", event_esc_exit, liblang)
 
-    helplabel = Gtk.Label(liblang.HELP.__doc__)
+    helplabel = Gtk.Label(liblang.help)
     helplabel.set_line_wrap(True)
     helplabel.set_max_width_chars(30)
     helpwin.add(helplabel)
@@ -71,20 +61,23 @@ def showhelp(button, win, liblang):
 
 def about_program(button, win, liblang):
     GPL_License = open("LICENSE").read()
-    aboutdialog = Gtk.AboutDialog(win)
-    aboutdialog.set_program_name("GEncrypter")
-    aboutdialog.set_version("4.0")
-    aboutdialog.set_copyright("Copyright © 2012-2014 Jingye Zhang\nCopyright © 2014-2016 Haoqing Zhu")
-    aboutdialog.set_comments(liblang.Abt_Comment)
-    aboutdialog.set_license(GPL_License)
-    aboutdialog.set_wrap_license(True)
-    aboutdialog.set_authors(["<a href=\"https://github.com/zhangjingye03\">Jingye Zhang</a>", "<a href=\"https://github.com/Irides-Chromium\">Haoqing Zhu</a>"])
-    aboutdialog.set_website("https://github.com/Irides-Chromium/GUI-Encrypter")
-    aboutdialog.set_website_label("Github project repository")
-    aboutdialog.set_logo_icon_name(prog_ico_name)
-    aboutdialog.set_transient_for(win)
-    aboutdialog.run()
-    aboutdialog.destroy()
+    about = Gtk.AboutDialog(win)
+    about.set_program_name("GEncrypter")
+    about.set_version("4.0")
+    about.set_copyright("Copyright © 2012-2014 Jingye Zhang\n" \
+                        "Copyright © 2014-2016 Haoqing Zhu")
+    about.set_comments(liblang.abt_comment)
+    about.set_license(GPL_License)
+    about.set_wrap_license(True)
+    about.set_authors( \
+        ["<a href=\"https://github.com/zhangjingye03\">Jingye Zhang</a>", \
+        "<a href=\"https://github.com/Irides-Chromium\">Haoqing Zhu</a>"])
+    about.set_website("https://github.com/Irides-Chromium/GUI-Encrypter")
+    about.set_website_label("Github project repository")
+    about.set_logo_icon_name(prog_ico_name)
+    about.set_transient_for(win)
+    about.run()
+    about.destroy()
 
 def show_notification(message):
     Notify.init("GEncrypter")
@@ -92,223 +85,155 @@ def show_notification(message):
 
 def scale(cur, res, num):
 # Default Settings
-    cur = int(cur)
-    res = int(res)
     num = str(num)
-    inmode = 0
-    outmode = 0
-    error = False
-    CapsFlag = True
-    Defined = True
-    Float = False
-    Positive = True
+    error = iscaps = False
+    defined = positive = True
 
     # Input
-    if cur > 62 or res > 62: Defined = False
-    if num.count(".") == 1:
-        Float =True
+    if cur > 64 or res > 64: defined = False
     if num.count("-") == 1:
-        Positive = False
-        num = str(num)[1:]
-    if cur > 36: inmode = 1
-    if res > 36: outmode = 1
-    bak = str(num)
-    num = 0
-    numofdigits = len(bak)
+        positive = False
+        num = num[1:]
+    inmode = True if cur > 36 else False
+    outmode = True if res > 36 else False
+    result = 0
+    num_of_digit = len(num)
 
-    if inmode == 1:
-        for i in range(0, numofdigits):
-            try: digitnum = ord(bak[i])
-            except: error = True
-            if digitnum >= 65 and digitnum <= 91:
-                digit = digitnum - 29
-            elif digitnum >= 97 and digitnum <= 122:
-                digit = digitnum - 87
-            else: digit = int(chr(digitnum))
-            if digit >= cur: error = True
-            num += digit*int(cur)**(n-i-1)
-            num = int(num)
-            digitnum = 0
-            digit = 0
-    else:
-        for i in range(0, numofdigits):
-            try: digitnum = ord(bak[i])
-            except: error = True
-            if digitnum >= 97 and digitnum <= 122:
-                digit = digitnum - 87
-            else: digit = int(chr(digitnum))
-            if digit >= cur: error = True
-            num += digit*int(cur)**(numofdigits-i-1)
-            num = int(num)
-            digitnum = 0
-            digit = 0
+    if cur != 10:
+        for i in range(num_of_digit):
+            value = ord(num[i])
+            if value in range(48, 58): value -= 48
+            elif value in range(97, 123): value -= 87
+            elif inmode:
+                if value in range(65, 92): value -= 29
+                elif value == 64: value = 62
+                elif value == 95: value = 63
+            elif value in range(65, 92): value -= 55
+            if value >= cur: error = True
+            result += value * cur ** (num_of_digit - i - 1)
 
     # Output
     if res != 10:
-        strdigit = ""
-        for i in range(1, 17):
-            if int(res)**i > num:
-                numofdigits = i
-                break
-        digit = 0
-        if outmode == 1:
-            for i in range(1, numofdigits + 1):
-                digit = num%int(res)
-                digitnum = digit
-                if digit >= 10 and digit <= 35:
-                    digitnum = chr(int(digit + 87))
-                if digit >= 36 and digit <= 61:
-                    digitnum = chr(int(digit + 29))
-                strdigit = str(digitnum) + strdigit
-                num = int(floor(num/int(res)))
-            num = strdigit
-        else:
-            for i in range(1, numofdigits + 1):
-                digit = num%int(res)
-                digitnum = digit
-                if digit >= 10 and digit <= 35:
-                    digitnum = chr(int(digit + 87))
-                strdigit = str(digitnum) + strdigit
-                num = int(floor(num/int(res)))
-            num = strdigit
-    if error == True:
-        raise Exception("ERROR")
-    if error == False and Defined == True:
-        if Positive == False:
-            num = "-" + str(num)
-        return num
+        num = int(result or num)
+        result = ""
+        while num > 0:
+            value = num % res
+            if value < 10: digit = value + 48
+            elif value <= 35: digit = value + 87
+            elif outmode:
+                if value <= 61: digit = value + 29
+                elif value == 62: digit = "@"
+                elif value == 63: digit = "_"
+            elif iscaps: digit = value + 55
+            result = chr(digit) + result
+            num //= res
+    if error: raise Exception("ERROR")
+    elif defined:
+        if not positive: result = "-" + result
+        return result
 
 def reverse(string):
-    List = list(str(string))
-    List.reverse()
-    reversedd = "".join(List)
-    return reversedd
+    _list = list(string)
+    _list.reverse()
+    return "".join(_list)
 
 def encrypter(string, mode, uc3):
-    try:
-        startTime = str(int(time() * 1000))
-        part1 = startTime[10:13]
-        part2 = string
-        part3 = round(random() * 100)
-        part4 = startTime[0:5]
-        part5 = round(random() * 10)
-        if part5 == 0: part5 = 10
-        part6 = startTime[5:10]
+    start_time = str(int(time() * 1000))
+    part1 = int(start_time[10:13])
+    part2 = string
+    part3 = round(random() * 100)
+    part4 = int(start_time[0:5])
+    part5 = round(random() * 10)
+    if part5 == 0: part5 = 10
+    part6 = int(start_time[5:10])
 
-        ectpart1 = scale(10, 15, reverse(part1))
-        ectpart2 = uc3(part2, int(part1), int(part4))
-        ectpart3 = scale(10, 3, part3)
-        ectpart4 = reverse(scale(10, 36, (int(part4) + 15 - int(ectpart3))))
-        ectpart5 = scale(10, 9, part5)
-        ectpart6 = reverse(scale(10, 35, (int(part6) - 15*part5)))
+    ectpart1 = scale(10, 15, reverse(str(part1)))
+    ectpart2 = uc3(part2, part1, part4)
+    ectpart3 = scale(10, 3, part3)
+    ectpart4 = reverse(scale(10, 36, part4 + 15 - int(ectpart3)))
+    ectpart5 = scale(10, 9, part5)
+    ectpart6 = reverse(scale(10, 35, part6 - 15 * part5))
 
-        retn = "~"
-        if mode == "Normal":
-            retn += ectpart1 + "n!"
-        if mode == "Hex":
-            retn += ectpart1 + "h!"
-        retn += ectpart2 + "!"
-        retn += ",".join((ectpart3, ectpart4, ectpart5, ectpart6))
-        endTime = int(time()*1000)
-        TimeUsed = int(endTime) - int(startTime)
-        return retn, TimeUsed
-    except:
-        pass
+    retn = "~" + ectpart1
+    retn += "n!" if mode == "Normal" else "h!"
+    retn += ectpart2 + "!"
+    retn += ",".join((ectpart3, ectpart4, ectpart5, ectpart6))
+    time_used = int(time() * 1000) - int(start_time)
+    return retn, time_used
 
 def decrypter(code, checksum, un3):
-    try:
-        startTime = int(time()*1000)
-        code = code[1:].split("!")
-        if code[0][-1] == "h"\
-        or code[0][-1] == "n":
-            code[0] = code[0][:-1]
+    start_time = int(time() * 1000)
+    code = code[1:].split("!")
+    if code[0][-1] == "h"\
+    or code[0][-1] == "n":
+        code[0] = code[0][:-1]
 
-        part2 = code[1]
-        part36 = code[2].split(",");
+    part2 = code[1]
+    part36 = code[2].split(",");
 
-        dctpart1 = reverse(int(code[0], 15))
-        dctpart3 = int(part36[0], 3)
-        dctpart4 = int(reverse(part36[1]), 36) - 15 + int(part36[0])
-        dctpart5 = int(part36[2])
-        dctpart6 = int(reverse(part36[3]), 35) + (15*dctpart5)
-        dctpart2 = un3(part2, dctpart1, dctpart4)
+    dctpart1 = int(reverse(str(int(code[0], 15))))
+    dctpart3 = int(part36[0], 3)
+    dctpart4 = int(reverse(part36[1]), 36) - 15 + int(part36[0])
+    dctpart5 = int(part36[2])
+    dctpart6 = int(reverse(part36[3]), 35) + (15 * dctpart5)
+    dctpart2 = un3(part2, dctpart1, dctpart4)
 
-        endTime = int(time()*1000)
-        needtime = endTime - startTime
-        retn = dctpart2
-        if not checksum:
-            ecttime = str(dctpart4) + str(dctpart6) + str(dctpart1)
-            tc = ctime(float(ecttime[0:10])).split(" ")
-            date = " ".join((tc[4], tc[1], tc[2], tc[3]))
-            retn = dctpart2, date, needtime
-        return retn
-    except:
-        pass
+    needtime = int(time() * 1000) - start_time
+    retn = dctpart2
+    if not checksum:
+        ecttime = str(dctpart4) + str(dctpart6) + str(dctpart1)
+        tc = ctime(float(ecttime[0:10])).split(" ")
+        date = " ".join((tc[5], tc[1], tc[3], tc[4]))
+        retn = dctpart2, date, needtime
+    return retn
 
 def hexencrypter(code):
-    try:
-        string = code.split("!")
-        code1 = string[0]
-        code3 = string[2]
-        stringlist = string[1].split(",")
-        hexcode = ""
-        for HEX in stringlist:
-            hexcode += "@"
-            if HEX[0] == "-":
-                hexcode += "-"
-                HEX = HEX[1:]
-            if len(HEX) % 2 == 1:
-                HEX = "0" + HEX
-            for i in range(0, len(HEX), 2):
-                hexcode += chr(int(HEX[i:i+2], 16))
-        hexcode = hexcode[1:]
-        code1 += "h"
-        result = "!".join((code1, hexcode, code3))
-        return result
-    except:
-        pass
+    code1, stringlist, code3 = code.split("!")
+    stringlist = stringlist.split(",")
+    hexcode = ""
+    for HEX in stringlist:
+        hexcode += "@"
+        if HEX[0] == "-":
+            hexcode += "-"
+            HEX = HEX[1:]
+        if len(HEX) % 2: HEX = "0" + HEX
+        for i in range(0, len(HEX), 2):
+            hexcode += chr(int(HEX[i:i+2], 16))
+    hexcode = hexcode[1:]
+    code1 += "h"
+    return "!".join((code1, hexcode, code3))
 
 def hexdecrypter(hcode):
-    try:
-        hexcode = hcode.split("!")
-        code1 = hexcode[0][:-1]
-        code3 = hexcode[2]
-        HEXlist = hexcode[1].split("@")
-        string = ""
-        for HEX in HEXlist:
-            string += ","
-            if HEX[0] == "-":
-                string += "-"
-                HEX = HEX[1:]
-            for i in HEX:
-                string += hex(ord(i))[2:]
-        string = string[1:]
-        result = "!".join((code1, string, code3))
-        return result
-    except:
-        pass
+    code1, HEXlist, code3 = hcode.split("!")
+    code1 = code1[:-1]
+    HEXlist = HEXlist.split("@")
+    string = ""
+    for HEX in HEXlist:
+        string += ","
+        if HEX[0] == "-":
+            string += "-"
+            HEX = HEX[1:]
+        for i in HEX: string += hex(ord(i))[2:]
+    string = string[1:]
+    return "!".join((code1, string, code3))
 
 def uni_uc3(this, utc, it):
     retn = ""
-    n = len(this)
-    for i in range(n):
+    for i in range(len(this)):
         if i % 2 != 0:
-            retn += str(scale(10, 15, str(ord(this[i]) + utc - i))) + ","
+            retn += scale(10, 15, ord(this[i]) + utc - i) + ","
         else:
-            retn += str(scale(10, 12, str(ord(this[i]) - it + i))) + ","
-
+            retn += scale(10, 12, ord(this[i]) - it + i) + ","
     return retn[0:-1]
 
-def asc_uc3(this, utc, it):
+def utf_uc3(this, utc, it):
     retn = ""
-    this = this.encode("utf-8")
-    n = len(this)
-    for i in range(n):
+    this = this.encode()
+    for i in range(len(this)):
         if i % 2 != 0:
-            retn += str(scale(10, 15, str(this[i] + utc - i))) + ","
+            retn += scale(10, 15, this[i] + utc - i) + ","
         else:
-            retn += str(scale(10, 12, str(this[i] - it + i))) + ","
-
+            retn += scale(10, 12, this[i] - it + i) + ","
     return retn[0:-1]
 
 def uni_un3(this, utc, it):
@@ -321,7 +246,7 @@ def uni_un3(this, utc, it):
             retn += chr(int(tmmp[i], 12) + it - i)
     return retn
 
-def asc_un3(this, utc, it):
+def utf_un3(this, utc, it):
     retn = []
     tmmp = this.split(",")
     for i in range(len(tmmp)):
@@ -329,75 +254,67 @@ def asc_un3(this, utc, it):
             retn.append(int(tmmp[i], 15) - utc + i)
         else:
             retn.append(int(tmmp[i], 12) + it - i)
-    return bytes(retn).decode("utf-8")
+    return bytes(retn).decode()
 
 def set_text_mono(label, text):
     label.set_markup("<span font=\"Ubuntu Mono 12\">%s</span>" % text)
 
 def encrypt(button, self, _set):
-    text_start, text_end = self.textbox_buf.get_bounds()
-    Text = self.textbox_buf.get_text(text_start, text_end, True)
-    if Text == ""\
-    or Text == "\n"\
-    or Text == " ":
-        cleartext(None, self, False)
-        set_text_mono(self.StrVarMsg, _set.liblang.Msg_ERR)
+    uc3 = utf_uc3 if _set.encode == "UTF-8" else uni_uc3
+    un3 = utf_un3 if _set.encode == "UTF-8" else uni_un3
+    text = self.text_buf.get_text(*self.text_buf.get_bounds(), True)
+    if text == "" or text == "\n" or text == " ":
+        cleartext(None, self, True)
+        set_text_mono(self.strvarmsg, _set.liblang.msg_err)
     else:
-        ect_str = encrypter(Text, _set.omode)
-        ect_str = ect_str[0]
-        needtime = ect_str[1]
-        dct_str = decrypter(ect_str, True)
-        if dct_str != Text:
-            cleartext(None, self, False)
-            set_text_mono(self.StrVarStat, _set.liblang.Msg_Stat_Enc[0])
+        ect_str, needtime = encrypter(text, _set.mode, uc3)
+        dct_str = decrypter(ect_str, True, un3)
+        if dct_str != text:
+            cleartext(None, self, True)
+            set_text_mono(self.strvarstat, _set.liblang.msg_stat_enc[0])
         else:
-            if _set.omode == "Hex":
+            if _set.mode == "Hex":
                 ect_str = hexencrypter(ect_str)
-            cleartext(None, self, False)
-            set_text_mono(self.StrVarStat, _set.liblang.Msg_Stat_Enc[1])
-            set_text_mono(self.StrVarTimeUsed, str(needtime) + _set.liblang.Time_Encryption)
-            self.textbox_buf.set_text(ect_str)
-            clipboard_callback(None, "auto_copy", self)
+            cleartext(None, self, True)
+            set_text_mono(self.strvarstat, _set.liblang.msg_stat_enc[1])
+            set_text_mono(self.strvartimeused, str(needtime) + _set.liblang.time_encryption)
+            self.text_buf.set_text(ect_str)
+            clipbd_cb(None, "auto_copy", self)
 
 def decrypt(button, self, _set):
-    text_start, text_end = self.textbox_buf.get_bounds()
-    ect_str = self.textbox_buf.get_text(text_start, text_end, True)
-    if ect_str == ""\
-    or ect_str == "\n"\
-    or ect_str == " "\
-    or ect_str[0] != "~":
-        cleartext(None, self, True)
-        set_text_mono(self.StrVarMsg, _set.liblang.Msg_ERR)
+    un3 = utf_un3 if _set.encode == "UTF-8" else uni_un3
+    ect_str = self.text_buf.get_text(*self.text_buf.get_bounds(), True)
+    if ect_str == "" or ect_str == "\n"\
+    or ect_str == " " or ect_str[0] != "~":
+        cleartext(None, self, False)
+        set_text_mono(self.strvarmsg, _set.liblang.msg_err)
     else:
         flag = ect_str.split("!")[0][-1]
         if flag == "h":
-            midect_str = hexdecrypter(ect_str)
-            Text = decrypter(midect_str, False)
+            ect_str = hexdecrypter(ect_str)
+        text = decrypter(ect_str, False, un3)
+        if type(text) == type((2,)):
+            cleartext(None, self, True)
+            self.text_buf.set_text(text[0])
+            set_text_mono(self.strvarstat, _set.liblang.msg_stat_dec[1])
+            set_text_mono(self.strvarmsg, _set.liblang.time_encrypted + text[1])
+            set_text_mono(self.strvartimeused, str(text[2]) + _set.liblang.time_encryption)
+            clipbd_cb(None, "auto_copy", self)
         else:
-            Text = decrypter(ect_str, False)
-        if type(Text) == type(("2",)):
-            cleartext(None, self, False)
-            self.textbox_buf.set_text(Text[0])
-            set_text_mono(self.StrVarStat, _set.liblang.Msg_Stat_Dec[1])
-            set_text_mono(self.StrVarMsg, _set.liblang.Time_Encrypted + Text[1])
-            set_text_mono(self.StrVarTimeUsed, str(Text[2]) + _set.liblang.Time_Encryption)
-            clipboard_callback(None, "auto_copy", self)
-        else:
-            cleartext(None, self, False)
-            set_text_mono(self.StrVarStat, _set.liblang.Msg_Stat_Dec[0])
+            cleartext(None, self, True)
+            set_text_mono(self.strvarstat, _set.liblang.msg_stat_dec[0])
 
-def cleartext(button, self, not_with_text):
-    self.StrVarStat.set_text("")
-    self.StrVarMsg.set_text("")
-    self.StrVarTimeUsed.set_text("")
-    if not_with_text == False:
-        self.textbox_buf.set_text("")
+def cleartext(button, self, with_textbox):
+    self.strvarstat.set_text("")
+    self.strvarmsg.set_text("")
+    self.strvartimeused.set_text("")
+    if with_textbox: self.text_buf.set_text("")
 
 def about(button, self, liblang):
-    cleartext(None, self, False)
-    self.textbox_buf.set_text(liblang.ABOUT.__doc__)
+    cleartext(None, self, True)
+    self.text_buf.set_text(liblang.about)
 
-class Default():
+class default():
     lang = "en_US"
     mode = "Normal"
     encoding = "ASCII"

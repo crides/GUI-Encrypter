@@ -14,7 +14,7 @@ class en_US():
     time_encrypted = "Encrypted on: "
     
     lbl_label = ["TextBox", "Status", "Message", "Time Used"]
-    lbl_set_label = ["Language", "Mode", "Normal", "Hexage"]
+    lbl_set_label = ["Language", "Mode", "Normal", "Hexage", "Encoding"]
     
     lbl_btn = ["E_ncrypt", "_Decrypt", "_Clear", "About"]
     lbl_set_btn = ["Apply", "Close"]
