@@ -3,7 +3,6 @@
 
 #   scale           Change Scale for the Number
 #   count           Count Numbers of Items in Iterables
-#   reverse         Turn the string around
 #   encrypter       Encrypt the String and Output
 #   decrypter       Decrypt the String and Output
 #   hexencrypter    For Encryption of Hexage Mode
@@ -90,27 +89,22 @@ def scale(cur, res, num):
     defined = positive = True
 
     # Input
-    if cur > 64 or res > 64: defined = False
+    if cur not in range(2, 37) or res not in range(2, 37): defined = False
     if num.count("-") == 1:
         positive = False
         num = num[1:]
-    inmode = True if cur > 36 else False
-    outmode = True if res > 36 else False
     result = 0
-    num_of_digit = len(num)
+    unit = 1
 
     if cur != 10:
-        for i in range(num_of_digit):
-            value = ord(num[i])
+        for i in num[::-1]:
+            value = ord(i)
             if value in range(48, 58): value -= 48
             elif value in range(97, 123): value -= 87
-            elif inmode:
-                if value in range(65, 92): value -= 29
-                elif value == 64: value = 62
-                elif value == 95: value = 63
             elif value in range(65, 92): value -= 55
             if value >= cur: error = True
-            result += value * cur ** (num_of_digit - i - 1)
+            result += value * unit
+            unit *= cur
 
     # Output
     if res != 10:
@@ -120,22 +114,13 @@ def scale(cur, res, num):
             value = num % res
             if value < 10: digit = value + 48
             elif value <= 35: digit = value + 87
-            elif outmode:
-                if value <= 61: digit = value + 29
-                elif value == 62: digit = "@"
-                elif value == 63: digit = "_"
             elif iscaps: digit = value + 55
             result = chr(digit) + result
             num //= res
     if error: raise Exception("ERROR")
     elif defined:
-        if not positive: result = "-" + result
+        if not positive: num = "-" + str(num)
         return result
-
-def reverse(string):
-    _list = list(string)
-    _list.reverse()
-    return "".join(_list)
 
 def encrypter(string, mode, uc3):
     start_time = str(int(time() * 1000))
@@ -147,12 +132,12 @@ def encrypter(string, mode, uc3):
     if part5 == 0: part5 = 10
     part6 = int(start_time[5:10])
 
-    ectpart1 = scale(10, 15, reverse(str(part1)))
+    ectpart1 = scale(10, 15, str(part1)[::-1])
     ectpart2 = uc3(part2, part1, part4)
     ectpart3 = scale(10, 3, part3)
-    ectpart4 = reverse(scale(10, 36, part4 + 15 - int(ectpart3)))
+    ectpart4 = scale(10, 36, part4 + 15 - int(ectpart3))[::-1]
     ectpart5 = scale(10, 9, part5)
-    ectpart6 = reverse(scale(10, 35, part6 - 15 * part5))
+    ectpart6 = scale(10, 35, part6 - 15 * part5)[::-1]
 
     retn = "~" + ectpart1
     retn += "n!" if mode == "Normal" else "h!"
@@ -171,11 +156,11 @@ def decrypter(code, checksum, un3):
     part2 = code[1]
     part36 = code[2].split(",");
 
-    dctpart1 = int(reverse(str(int(code[0], 15))))
+    dctpart1 = int(str(int(code[0], 15))[::-1])
     dctpart3 = int(part36[0], 3)
-    dctpart4 = int(reverse(part36[1]), 36) - 15 + int(part36[0])
+    dctpart4 = int(part36[1][::-1], 36) - 15 + int(part36[0])
     dctpart5 = int(part36[2])
-    dctpart6 = int(reverse(part36[3]), 35) + (15 * dctpart5)
+    dctpart6 = int(part36[3][::-1], 35) + (15 * dctpart5)
     dctpart2 = un3(part2, dctpart1, dctpart4)
 
     needtime = int(time() * 1000) - start_time
