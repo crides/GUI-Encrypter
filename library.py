@@ -85,7 +85,7 @@ def show_notification(message):
 def scale(cur, res, num):
 # Default Settings
     num = str(num)
-    error = iscaps = False
+    error = False
     defined = positive = True
 
     # Input
@@ -114,12 +114,11 @@ def scale(cur, res, num):
             value = num % res
             if value < 10: digit = value + 48
             elif value <= 35: digit = value + 87
-            elif iscaps: digit = value + 55
             result = chr(digit) + result
             num //= res
     if error: raise Exception("ERROR")
     elif defined:
-        if not positive: num = "-" + str(num)
+        if not positive: result = "-" + str(result)
         return result
 
 def encrypter(string, mode, uc3):
@@ -167,8 +166,8 @@ def decrypter(code, checksum, un3):
     retn = dctpart2
     if not checksum:
         ecttime = str(dctpart4) + str(dctpart6) + str(dctpart1)
-        tc = ctime(float(ecttime[0:10])).split(" ")
-        date = " ".join((tc[5], tc[1], tc[3], tc[4]))
+        tc = ctime(float(ecttime[0:10])).split()
+        date = " ".join((tc[4], tc[1], tc[2], tc[3]))
         retn = dctpart2, date, needtime
     return retn
 
