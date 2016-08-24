@@ -30,28 +30,28 @@ class Settings():
             for line in lines:
                 data = line.split("=")
                 settings[data[0]] = data[1]
-            lang = settings["Language"]
-            mode = settings["Mode"]
-            encode = settings["Encoding"]
+            self.lang = settings["Language"]
+            self.mode = settings["Mode"]
+            self.encode = settings["Encoding"]
+            self.cipher = settings["Cipher"]
 
             if lang == "en_US": from lang import en_US as liblang
             else:               from lang import zh_CN as liblang
 
-            self.lang = lang
-            self.mode = mode
-            self.encode = encode
             self.liblang = liblang
         except:
             file = open("options", "w")
             lang = "Language=" + default.lang
             mode = "Mode=" + default.mode
             encode = "Encoding=" + default.encoding
+            cipher = "Cipher=" + default.cipher
             from lang import en_US as liblang
-            file.write("\n".join((lang, mode, encode)))
+            file.write("\n".join((lang, mode, encode, cipher)))
             file.close()
 
             self.lang = lang
             self.mode = mode
+            self.cipher = cipher
             self.encode = encode
             self.liblang = liblang
 
@@ -137,12 +137,9 @@ class Settings():
         box_btn.pack_start(apply_button, False, False, 0)
         box_btn.pack_end(close_button, False, False, 0)
 
-        if self.lang == "en_US": eng.set_active(True)
-        else: chn.set_active(True)
-        if self.mode == "Normal": norm.set_active(True)
-        else: hexm.set_active(True)
-        if self.encode == "UTF": utf.set_active(True)
-        else: uni.set_active(True)
+        (eng if self.lang == "en_US" else chn).set_active(True)
+        (hexm if self.lang == "Normal" else norm).set_active(True)
+        (uni if self.lang == "UTF" else utf).set_active(True)
 
         self.set_stat = False
         opt_win.add(box_general)
@@ -164,7 +161,8 @@ class main_window(Gtk.Window):
     def init_UI(self, _set):
         add_ = lambda a: (a, "_" + a)
         ### Basic Window ###
-        self.set_title(_set.liblang.title + " - " + title_mode + " " + _set.liblang.lbl_set_label[1])
+        title_method = Set.liblang.lbl_set_label[3 if Set.mode == "Hex" else 2]
+        self.set_title(_set.liblang.title + " - " + title_method + " " + _set.liblang.lbl_set_label[1])
         self.set_icon_name(prog_ico_name)
         self.set_resizable(False)
         self.set_size_request(400, 500)
@@ -322,12 +320,7 @@ class main_window(Gtk.Window):
 
 ### Program ###
 Set = Settings()
-
-if Set.mode == "Hex": title_mode = Set.liblang.lbl_set_label[3]
-else:                 title_mode = Set.liblang.lbl_set_label[2]
-
 prog_ico_name = "emblem-readonly"
-
 show_notification(Set.liblang.notification)
 
 win = main_window()

@@ -1,19 +1,8 @@
-from time import time, ctime
 from scale import scale
+from time import time, ctime
 class s_tape(str):
 
     def __init__(self, iterable=None):
-        self.ptr = 0
-
-    def get(self, i=-1, l=1):
-        i = self.ptr if i == -1 else i
-        self.ptr += l
-        return self[i:i + l]
-
-class a_tape(list):
-
-    def __init__(self, iterable=None):
-        super().__init__(iterable)
         self.ptr = 0
 
     def get(self, i=-1, l=1):
@@ -36,7 +25,7 @@ def FF2A(string):
         unit *= 256
     return result
 
-def encrypt(string):
+def zhu_encrypt(string):
     from random import randint
     #string = string.encode()        # To UTF-8
     string = s_tape(string)
@@ -74,7 +63,7 @@ def encrypt(string):
 
     return ''.join((enc_time, enc_str, hex(hash(string)).strip("-")[2:]))
 
-def decrypt(code):
+def zhu_decrypt(code):
     code = s_tape(code)
     dec_time = []
     for i in range(4):
@@ -95,7 +84,6 @@ def decrypt(code):
         enc = code.get(l=length)
         dec_str += A2FF(int(scale(base, 10, enc)) - key)
     _hash = code.get(l=16)
-    #print(_hash, hex(hash(dec_str)).strip("-")[2:])
     if _hash != hex(hash(dec_str)).strip("-")[2:]:
         raise Exception("Decryption Failed.")
     date = ctime(int("".join(dec_time[:3]))).split()

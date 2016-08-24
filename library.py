@@ -1,18 +1,9 @@
 #!/usr/bin/python3
-#   FUNCTIONS
-
-#   scale           Change Scale for the Number
-#   count           Count Numbers of Items in Iterables
-#   encrypter       Encrypt the String and Output
-#   decrypter       Decrypt the String and Output
-#   hexencrypter    For Encryption of Hexage Mode
-#   hexdecrypter    For Decryption of Hexage Mode
-#   uni_uc3             Intermediate Encryption Funtion
-#   uni_un3             Intermediate Decryption Funtion
 
 from time import time, ctime
 from math import floor
 from random import random
+from importlib import import_module
 import os, sys
 import gi
 gi.require_version("Gtk", "3.0")
@@ -20,6 +11,15 @@ gi.require_version("Notify", "0.7")
 from gi.repository import Gtk, Gdk, Notify
 
 prog_ico_name = "emblem-readonly"
+
+def find_modules():
+    modules = []
+    for file in filter(lambda a: a.endswith(".py"), os.listdir("methods")):
+        module_name = file[:-3]
+        modules.append(module_name)
+        exec("globals()['{}'] = import_module('methods.{}')" \
+                .format(module_name))
+    return modules
 
 def event_esc_exit(window, event, liblang):
     if event.keyval == Gdk.keyval_from_name("Escape"):
@@ -81,164 +81,6 @@ def about_program(button, win, liblang):
 def show_notification(message):
     Notify.init("GEncrypter")
     Notify.Notification.new("GEncrypter", message, prog_ico_name).show()
-
-def scale(cur, res, num):
-# Default Settings
-    num = str(num)
-    error = False
-    defined = positive = True
-
-    # Input
-    if cur not in range(2, 37) or res not in range(2, 37): defined = False
-    if num.count("-") == 1:
-        positive = False
-        num = num[1:]
-    result = 0
-    unit = 1
-
-    if cur != 10:
-        for i in num[::-1]:
-            value = ord(i)
-            if value in range(48, 58): value -= 48
-            elif value in range(97, 123): value -= 87
-            elif value in range(65, 92): value -= 55
-            if value >= cur: error = True
-            result += value * unit
-            unit *= cur
-
-    # Output
-    if res != 10:
-        num = int(result or num)
-        result = ""
-        while num > 0:
-            value = num % res
-            if value < 10: digit = value + 48
-            elif value <= 35: digit = value + 87
-            result = chr(digit) + result
-            num //= res
-    if error: raise Exception("ERROR")
-    elif defined:
-        if not positive: result = "-" + str(result)
-        return result
-
-def encrypter(string, mode, uc3):
-    start_time = str(int(time() * 1000))
-    part1 = int(start_time[10:13])
-    part2 = string
-    part3 = round(random() * 100)
-    part4 = int(start_time[0:5])
-    part5 = round(random() * 10)
-    if part5 == 0: part5 = 10
-    part6 = int(start_time[5:10])
-
-    ectpart1 = scale(10, 15, str(part1)[::-1])
-    ectpart2 = uc3(part2, part1, part4)
-    ectpart3 = scale(10, 3, part3)
-    ectpart4 = scale(10, 36, part4 + 15 - int(ectpart3))[::-1]
-    ectpart5 = scale(10, 9, part5)
-    ectpart6 = scale(10, 35, part6 - 15 * part5)[::-1]
-
-    retn = "~" + ectpart1
-    retn += "n!" if mode == "Normal" else "h!"
-    retn += ectpart2 + "!"
-    retn += ",".join((ectpart3, ectpart4, ectpart5, ectpart6))
-    time_used = int(time() * 1000) - int(start_time)
-    return retn, time_used
-
-def decrypter(code, checksum, un3):
-    start_time = int(time() * 1000)
-    code = code[1:].split("!")
-    if code[0][-1] == "h"\
-    or code[0][-1] == "n":
-        code[0] = code[0][:-1]
-
-    part2 = code[1]
-    part36 = code[2].split(",");
-
-    dctpart1 = int(str(int(code[0], 15))[::-1])
-    dctpart3 = int(part36[0], 3)
-    dctpart4 = int(part36[1][::-1], 36) - 15 + int(part36[0])
-    dctpart5 = int(part36[2])
-    dctpart6 = int(part36[3][::-1], 35) + (15 * dctpart5)
-    dctpart2 = un3(part2, dctpart1, dctpart4)
-
-    needtime = int(time() * 1000) - start_time
-    retn = dctpart2
-    if not checksum:
-        ecttime = str(dctpart4) + str(dctpart6) + str(dctpart1)
-        tc = ctime(float(ecttime[0:10])).split()
-        date = " ".join((tc[4], tc[1], tc[2], tc[3]))
-        retn = dctpart2, date, needtime
-    return retn
-
-def hexencrypter(code):
-    code1, stringlist, code3 = code.split("!")
-    stringlist = stringlist.split(",")
-    hexcode = ""
-    for HEX in stringlist:
-        hexcode += "@"
-        if HEX[0] == "-":
-            hexcode += "-"
-            HEX = HEX[1:]
-        if len(HEX) % 2: HEX = "0" + HEX
-        for i in range(0, len(HEX), 2):
-            hexcode += chr(int(HEX[i:i+2], 16))
-    hexcode = hexcode[1:]
-    code1 += "h"
-    return "!".join((code1, hexcode, code3))
-
-def hexdecrypter(hcode):
-    code1, HEXlist, code3 = hcode.split("!")
-    code1 = code1[:-1]
-    HEXlist = HEXlist.split("@")
-    string = ""
-    for HEX in HEXlist:
-        string += ","
-        if HEX[0] == "-":
-            string += "-"
-            HEX = HEX[1:]
-        for i in HEX: string += hex(ord(i))[2:]
-    string = string[1:]
-    return "!".join((code1, string, code3))
-
-def uni_uc3(this, utc, it):
-    retn = ""
-    for i in range(len(this)):
-        if i % 2 != 0:
-            retn += scale(10, 15, ord(this[i]) + utc - i) + ","
-        else:
-            retn += scale(10, 12, ord(this[i]) - it + i) + ","
-    return retn[0:-1]
-
-def utf_uc3(this, utc, it):
-    retn = ""
-    this = this.encode()
-    for i in range(len(this)):
-        if i % 2 != 0:
-            retn += scale(10, 15, this[i] + utc - i) + ","
-        else:
-            retn += scale(10, 12, this[i] - it + i) + ","
-    return retn[0:-1]
-
-def uni_un3(this, utc, it):
-    retn = ""
-    tmmp = this.split(",")
-    for i in range(len(tmmp)):
-        if i % 2 != 0:
-            retn += chr(int(tmmp[i], 15) - utc + i)
-        else:
-            retn += chr(int(tmmp[i], 12) + it - i)
-    return retn
-
-def utf_un3(this, utc, it):
-    retn = []
-    tmmp = this.split(",")
-    for i in range(len(tmmp)):
-        if i % 2 != 0:
-            retn.append(int(tmmp[i], 15) - utc + i)
-        else:
-            retn.append(int(tmmp[i], 12) + it - i)
-    return bytes(retn).decode()
 
 def set_text_mono(label, text):
     label.set_markup("<span font=\"Ubuntu Mono 12\">%s</span>" % text)
@@ -302,3 +144,4 @@ class default():
     lang = "en_US"
     mode = "Normal"
     encoding = "ASCII"
+    method = "method_zhang"
