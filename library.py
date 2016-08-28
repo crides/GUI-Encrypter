@@ -85,13 +85,11 @@ def show_notification(message):
 def set_text_mono(label, text):
     label.set_markup("<span font=\"Ubuntu Mono 12\">%s</span>" % text)
 
-def encrypt(button, self, _set):
-    uc3 = utf_uc3 if _set.encode == "UTF-8" else uni_uc3
-    un3 = utf_un3 if _set.encode == "UTF-8" else uni_un3
+def encrypt(button, self, _set, modules):
     text = self.text_buf.get_text(*self.text_buf.get_bounds(), True)
     if text == "" or text == "\n" or text == " ":
         cleartext(None, self, True)
-        set_text_mono(self.strvarmsg, _set.liblang.msg_err)
+        set_text_mono(self.strvarmsg, _set.liblang.msg_err_gen)
     else:
         ect_str, needtime = encrypter(text, _set.mode, uc3)
         dct_str = decrypter(ect_str, True, un3)
@@ -107,13 +105,13 @@ def encrypt(button, self, _set):
             self.text_buf.set_text(ect_str)
             clipbd_cb(None, "auto_copy", self)
 
-def decrypt(button, self, _set):
+def decrypt(button, self, _set, modules):
     un3 = utf_un3 if _set.encode == "UTF-8" else uni_un3
     ect_str = self.text_buf.get_text(*self.text_buf.get_bounds(), True)
     if ect_str == "" or ect_str == "\n"\
     or ect_str == " " or ect_str[0] != "~":
         cleartext(None, self, False)
-        set_text_mono(self.strvarmsg, _set.liblang.msg_err)
+        set_text_mono(self.strvarmsg, _set.liblang.msg_err_gen)
     else:
         flag = ect_str.split("!")[0][-1]
         if flag == "h":
@@ -142,6 +140,6 @@ def about(button, self, liblang):
 
 class default():
     lang = "en_US"
-    mode = "Normal"
     encoding = "ASCII"
     method = "method_zhang"
+    extra = []

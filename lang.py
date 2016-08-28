@@ -6,7 +6,8 @@ class en_US():
     
     notification = "Program Started!"
     
-    msg_err = "There is an Error."
+    msg_err_gen = "There is an Error."
+    msg_err_unk = "Unknown encrypted code."
     msg_stat_enc = ["Encryption Failed.", "Encryption Succeeded."]
     msg_stat_dec = ["Decryption Failed.", "Decryption Succeeded."]
     

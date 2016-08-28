@@ -31,9 +31,8 @@ class Settings():
                 data = line.split("=")
                 settings[data[0]] = data[1]
             self.lang = settings["Language"]
-            self.mode = settings["Mode"]
             self.encode = settings["Encoding"]
-            self.cipher = settings["Cipher"]
+            self.method = settings["Method"]
 
             if lang == "en_US": from lang import en_US as liblang
             else:               from lang import zh_CN as liblang
@@ -42,16 +41,14 @@ class Settings():
         except:
             file = open("options", "w")
             lang = "Language=" + default.lang
-            mode = "Mode=" + default.mode
             encode = "Encoding=" + default.encoding
-            cipher = "Cipher=" + default.cipher
+            method = "Method=" + default.method
             from lang import en_US as liblang
-            file.write("\n".join((lang, mode, encode, cipher)))
+            file.write("\n".join((lang, mode, encode, method)))
             file.close()
 
             self.lang = lang
-            self.mode = mode
-            self.cipher = cipher
+            self.method = method
             self.encode = encode
             self.liblang = liblang
 
@@ -132,14 +129,12 @@ class Settings():
         apply_button = Gtk.Button(self.liblang.lbl_set_btn[0])
         close_button = Gtk.Button(self.liblang.lbl_set_btn[1])
         apply_button.connect("clicked", self.applyset)
-        close_button.connect("clicked", \
-                lambda a, b: b.destroy(), opt_win)
+        close_button.connect("clicked", lambda a, b: b.destroy(), opt_win)
         box_btn.pack_start(apply_button, False, False, 0)
         box_btn.pack_end(close_button, False, False, 0)
 
         (eng if self.lang == "en_US" else chn).set_active(True)
-        (hexm if self.lang == "Normal" else norm).set_active(True)
-        (uni if self.lang == "UTF" else utf).set_active(True)
+        (uni if self.encode == "UTF" else utf).set_active(True)
 
         self.set_stat = False
         opt_win.add(box_general)
@@ -148,17 +143,18 @@ class Settings():
     def applyset(self, button):
         if self.set_stat:
             file = open("options", "w")
-            lang = "Language=" + self.lang
-            mode = "Mode=" + self.mode
+            lang = "Lang=" + self.lang
+            method = "Method=" + self.method
             encode = "Encoding=" + self.encode
-            file.write("\n".join((lang, mode, encode)))
+            file.write("\n".join((lang, method, encode)))
             file.close()
             Settings()
             os.execl(sys.executable, sys.executable, *sys.argv)# Restart
 
 class main_window(Gtk.Window):
 
-    def init_UI(self, _set):
+    def __init__(self, _set, modules):
+        Gtk.Window.__init__(self)
         add_ = lambda a: (a, "_" + a)
         ### Basic Window ###
         title_method = Set.liblang.lbl_set_label[3 if Set.mode == "Hex" else 2]
@@ -307,8 +303,8 @@ class main_window(Gtk.Window):
         clear_btn.set_tooltip_text(_set.liblang.tooltip[6])
         about_btn.set_tooltip_text(_set.liblang.tooltip[7])
 
-        encrypt_btn.connect("clicked", encrypt, self, _set)
-        decrypt_btn.connect("clicked", decrypt, self, _set)
+        encrypt_btn.connect("clicked", encrypt, self, _set, modules)
+        decrypt_btn.connect("clicked", decrypt, self, _set, modules)
         clear_btn.connect("clicked", cleartext, self, True)
         about_btn.connect("clicked", about, self, _set.liblang)
 
@@ -320,11 +316,11 @@ class main_window(Gtk.Window):
 
 ### Program ###
 Set = Settings()
+modules = find_modules()
 prog_ico_name = "emblem-readonly"
 show_notification(Set.liblang.notification)
 
-win = main_window()
-win.init_UI(Set)
+win = main_window(Set, modules)
 win.connect("delete-event", Gtk.main_quit)
 win.show_all()
 Gtk.main()

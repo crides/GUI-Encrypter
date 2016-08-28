@@ -1,15 +1,18 @@
 #!/usr/bin/python3
 from scale import scale
 
+__extra__ = {'Hex': (True, False)}
+accept_set = True
+
 def encrypt(string, _set):
-    start_time = str(int(time() * 1000))
-    part1 = int(start_time[10:13])
+    _time = str(int(time() * 1000))
+    part1 = int(_time[10:13])
     part2 = string
     part3 = round(random() * 100)
-    part4 = int(start_time[0:5])
+    part4 = int(_time[0:5])
     part5 = round(random() * 10)
     if part5 == 0: part5 = 10
-    part6 = int(start_time[5:10])
+    part6 = int(_time[5:10])
 
     ectpart1 = scale(10, 15, str(part1)[::-1])
     ectpart2 = uc3(part2, part1, part4)
@@ -20,11 +23,10 @@ def encrypt(string, _set):
 
     retn = "~" + ectpart1 + "!" + ectpart2 + "!"
     retn += ",".join((ectpart3, ectpart4, ectpart5, ectpart6))
-    time_used = int(time() * 1000) - int(start_time)
-    return retn, time_used
+    return retn
 
 def decrypt(code, _set):
-    start_time = int(time() * 1000)
+    _time = int(time() * 1000)
     code = code[1:].split("!")
     if code[0][-1] == "h"\
     or code[0][-1] == "n":
@@ -40,11 +42,10 @@ def decrypt(code, _set):
     dctpart6 = int(part36[3][::-1], 35) + (15 * dctpart5)
     dctpart2 = un3(part2, dctpart1, dctpart4)
 
-    needtime = int(time() * 1000) - start_time
     ecttime = str(dctpart4) + str(dctpart6) + str(dctpart1)
     tc = ctime(float(ecttime[0:10])).split()
     date = " ".join((tc[4], tc[1], tc[2], tc[3]))
-    return dctpart2, date, needtime
+    return dctpart2, date
 
 def hexencrypter(code):
     code1, stringlist, code3 = code.split("!")

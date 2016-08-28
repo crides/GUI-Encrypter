@@ -1,5 +1,9 @@
 from scale import scale
 from time import time, ctime
+
+__extra__ = {}
+accept_set = True
+
 class s_tape(str):
 
     def __init__(self, iterable=None):
@@ -25,7 +29,7 @@ def FF2A(string):
         unit *= 256
     return result
 
-def zhu_encrypt(string):
+def encrypt(string, _set):
     from random import randint
     #string = string.encode()        # To UTF-8
     string = s_tape(string)
@@ -63,7 +67,7 @@ def zhu_encrypt(string):
 
     return ''.join((enc_time, enc_str, hex(hash(string)).strip("-")[2:]))
 
-def zhu_decrypt(code):
+def decrypt(code, _set):
     code = s_tape(code)
     dec_time = []
     for i in range(4):
