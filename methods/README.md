@@ -9,6 +9,6 @@ If you want to add your own encryption and decryption method, please add a modul
 
 If you want to accept the built-in settings class, please add it as the second argument.
 
-If your module have more options other than those in the settings class for input, please specify an `__extra__` dictionary with the option as the key, and allowed values as a tuple for the value. The key-value pair will be shown as extra options in the settings. Please add them as parameter **after** the existing arguments.
+If your module have more options other than those in the settings class for input, please specify an `extra` dictionary with the option as the key, and allowed values as a tuple for the value. The key-value pair will be shown as extra options in the settings. Please add them as parameter **after** the existing arguments.
 
 Examples can be seen in the provided files.

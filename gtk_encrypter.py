@@ -4,12 +4,12 @@
 ### GUI Encrypter by Zhu Haoqing (Originally Zhang Jingye) ###
 ### Rev: 5.0
 ### Runtime Environment: Python3
-### Hexage Mode added (USE WITH CAUTION!!!)
 ### Auto Copy after process added
 ### Time bugs fixed
 
 import lang
 from library import *
+from configparser import ConfigParser
 import gi
 
 gi.require_version("Gtk", "3.0")
@@ -19,55 +19,60 @@ from gi.repository import Gtk, Gdk, Notify
 
 class Settings():
 
-    set_stat = False
-
     def __init__(self):
+        config = ConfigParser()
         try:
-            file = open("options").read()
-            if file == "": raise IOError
-            lines = file.splitlines()
-            settings = {}
-            for line in lines:
-                data = line.split("=")
-                settings[data[0]] = data[1]
-            self.lang = settings["Language"]
-            self.encode = settings["Encoding"]
-            self.method = settings["Method"]
-
-            if lang == "en_US": from lang import en_US as liblang
-            else:               from lang import zh_CN as liblang
-
-            self.liblang = liblang
+            config.read("options")
+            self.lang = config["Normal"].get("Language", default.lang)
+            self.encode = config["Normal"].get("Encoding", default.encode)
+            self.method = config["Normal"].get("Method", default.method)
+            self.extra = {k: config["Extra"][k] for k in config["Extra"]}
+        
         except:
-            file = open("options", "w")
-            lang = "Language=" + default.lang
-            encode = "Encoding=" + default.encoding
-            method = "Method=" + default.method
-            from lang import en_US as liblang
-            file.write("\n".join((lang, mode, encode, method)))
-            file.close()
+            config["Normal"] = {"Language": default.lang,
+                                "Encoding": default.encode,
+                                "Method": default.method}
+            config["Extra"] = {}
+            with open("options", "w") as f: config.write(f)
+            self.lang = default.lang
+            self.method = default.method
+            self.encode = default.encode
+            self.extra = default.extra
 
-            self.lang = lang
-            self.method = method
-            self.encode = encode
-            self.liblang = liblang
+        if self.method not in find_methods(): set_text_mono( \
+                self.strvarmsg, _set.liblang.msg_err_met % self.method)
 
-    def lang_register(self, widget):
+        self.liblang = vars(lang)[self.lang]
+
+    def register(self, button):
         self.set_stat = True
-        if widget.get_label() == "English": self.lang = "en_US"
-        else:                               self.lang = "zh_CN"
+        label = button.get_label()
+        if label == "English": self.lang = "en_US"
+        elif label == "中文":  self.lang = "zh_CN"
+        elif label == "UTF-8": self.encode = "UTF"
+        elif label == "Unicode": self.encode = "Uni"
 
-    def mode_register(self, widget):
+    def method_register(self, button):
         self.set_stat = True
-        if widget.get_label() == self.liblang.lbl_set_label[2]:
-            self.mode = "Normal"
-        else:
-            self.mode = "Hex"
+        self.method = button.get_label()
 
-    def encode_register(self, widget):
-        self.set_stat = True
-        if widget.get_label() == "UTF-8": self.encode = "UTF"
-        else:                             self.encode = "Uni"
+    def load_methods(self, button, grid, opt_win):
+        methods = find_methods()
+        grid.remove_column(0)
+        grid.remove_column(0)
+        if len(methods) == 0: grid.attach( \
+                Gtk.Label("No methods available"), 0, 0, 1, 1)
+        group = None
+        for i, v in enumerate(methods):
+            locals()["btn_%s" % v] = Gtk.RadioButton(label=v, group=group)
+            if i == 0: group = locals()["btn_%s" % v]
+            grid.attach(locals()["btn_%s" % v], *divmod(i, 2)[::-1], 1, 1)
+            locals()["btn_%s" % v].connect("clicked", self.method_register)
+            if v == self.method: locals()["btn_%s" % v].set_active(True)
+        grid.set_column_homogeneous(True)
+        grid.set_row_homogeneous(True)
+
+        opt_win.show_all()
 
     def settings_dialog(self, widget, win):
         opt_win = Gtk.Window()
@@ -79,7 +84,8 @@ class Settings():
         opt_win.set_modal(True)
         opt_win.set_destroy_with_parent(True)
         opt_win.set_border_width(10)
-        opt_win.connect("key_press_event", event_esc_exit, self.liblang)
+        #opt_win.connect("key-press-event", event_esc_exit)
+        opt_win.connect("delete-event", self.applyset, win)
 
         box_general = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
 
@@ -91,8 +97,8 @@ class Settings():
         box_lang_b.pack_start(box_lang_s, True, True, 0)
         eng = Gtk.RadioButton(label="English")
         chn = Gtk.RadioButton(group=eng, label="中文")
-        eng.connect("toggled", self.lang_register)
-        chn.connect("toggled", self.lang_register)
+        eng.connect("toggled", self.register)
+        chn.connect("toggled", self.register)
         box_lang_s.pack_start(eng, True, True, 0)
         box_lang_s.pack_end(chn, True, True, 0)
 
@@ -102,69 +108,65 @@ class Settings():
         note.set_single_line_mode(False)
         box_lang_b.pack_start(note, True, True, 5)
 
-        frame_mode = Gtk.Frame(label=self.liblang.lbl_set_label[1])
-        box_general.pack_start(frame_mode, True, True, 5)
-        box_mode = Gtk.Box()
-        frame_mode.add(box_mode)
-        norm = Gtk.RadioButton(label=self.liblang.lbl_set_label[2])
-        hexm = Gtk.RadioButton(group=norm, label=self.liblang.lbl_set_label[3])
-        norm.connect("toggled", self.mode_register)
-        hexm.connect("toggled", self.mode_register)
-        box_mode.pack_start(norm, True, True, 0)
-        box_mode.pack_start(hexm, True, True, 0)
-
-        frame_encode = Gtk.Frame(label="Encodings")
+        frame_encode = Gtk.Frame(label=self.liblang.lbl_set_frm[0])
         box_general.pack_start(frame_encode, True, True, 5)
         box_encode = Gtk.Box()
         frame_encode.add(box_encode)
         utf = Gtk.RadioButton(label="UTF-8")
         uni = Gtk.RadioButton(label="Unicode", group=utf)
-        utf.connect("toggled", self.encode_register)
-        uni.connect("toggled", self.encode_register)
+        utf.connect("toggled", self.register)
+        uni.connect("toggled", self.register)
         box_encode.pack_start(utf, True, True, 0)
         box_encode.pack_start(uni, True, True, 0)
 
-        box_btn = Gtk.Box()
-        box_general.pack_end(box_btn, True, False, 3)
-        apply_button = Gtk.Button(self.liblang.lbl_set_btn[0])
-        close_button = Gtk.Button(self.liblang.lbl_set_btn[1])
-        apply_button.connect("clicked", self.applyset)
-        close_button.connect("clicked", lambda a, b: b.destroy(), opt_win)
-        box_btn.pack_start(apply_button, False, False, 0)
-        box_btn.pack_end(close_button, False, False, 0)
+        frame_method = Gtk.Frame(label=self.liblang.lbl_set_frm[1])
+        box_general.pack_start(frame_method, True, True, 5)
+        frame_method.set_tooltip_text(self.liblang.tooltip[8])
+        box_method = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
+        frame_method.add(box_method)
+        btn_refresh = Gtk.Button.new_from_icon_name("view-refresh", \
+                Gtk.IconSize.LARGE_TOOLBAR)
+        box_method.pack_start(btn_refresh, False, False, 3)
+        btn_refresh.set_tooltip_text(self.liblang.tooltip[9])
+        grid_method = Gtk.Grid()
+        btn_refresh.connect("clicked", self.load_methods, \
+                grid_method, opt_win)
+        box_method.pack_start(grid_method, False, False, 3)
+        self.load_methods(None, grid_method, opt_win)
 
         (eng if self.lang == "en_US" else chn).set_active(True)
-        (uni if self.encode == "UTF" else utf).set_active(True)
+        (utf if self.encode == "UTF" else uni).set_active(True)
 
         self.set_stat = False
         opt_win.add(box_general)
         opt_win.show_all()
 
-    def applyset(self, button):
+    def applyset(self, opt_win, event, main_win):
         if self.set_stat:
-            file = open("options", "w")
-            lang = "Lang=" + self.lang
-            method = "Method=" + self.method
-            encode = "Encoding=" + self.encode
-            file.write("\n".join((lang, method, encode)))
-            file.close()
-            Settings()
-            os.execl(sys.executable, sys.executable, *sys.argv)# Restart
+            config = ConfigParser()
+            config["Normal"] = {}
+            config["Normal"]["Language"] = self.lang
+            config["Normal"]["Encoding"] = self.encode
+            config["Normal"]["Method"] = self.method
+            config["Extra"] = self.extra
+            with open("options", "w") as f: config.write(f)
+            main_win.set_title(self.liblang.title + " - " + \
+                    self.liblang.lbl_set_label[1] + ": " + self.method)
+
 
 class main_window(Gtk.Window):
 
-    def __init__(self, _set, modules):
-        Gtk.Window.__init__(self)
+    def __init__(self, _set):
+        super().__init__()
         add_ = lambda a: (a, "_" + a)
         ### Basic Window ###
-        title_method = Set.liblang.lbl_set_label[3 if Set.mode == "Hex" else 2]
-        self.set_title(_set.liblang.title + " - " + title_method + " " + _set.liblang.lbl_set_label[1])
+        self.set_title(_set.liblang.title + " - " + _set.liblang.lbl_set_label[1] + ": " + _set.method)
         self.set_icon_name(prog_ico_name)
         self.set_resizable(False)
         self.set_size_request(400, 500)
         self.set_position(Gtk.WindowPosition.CENTER)
         self.set_border_width(10)
-        self.connect("key_press_event", event_esc_exit, _set.liblang)
+        #self.connect("key-press-event", event_esc_exit)
 
         ### General Box ###
         box_general = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
@@ -187,9 +189,9 @@ class main_window(Gtk.Window):
         menu_separater = Gtk.SeparatorMenuItem()
         preference_submenu = Gtk.Action(*add_(_set.liblang.menu_edit_[4]), None, None).create_menu_item()
 
-        copy_submenu.connect("activate", clipbd_cb, "copy")
-        cut_submenu.connect("activate", clipbd_cb, "cut")
-        paste_submenu.connect("activate", clipbd_cb, "paste")
+        copy_submenu.connect("activate", clipbd_cb, self, "copy")
+        cut_submenu.connect("activate", clipbd_cb, self, "cut")
+        paste_submenu.connect("activate", clipbd_cb, self, "paste")
         selectall_submenu.connect("activate", selectall, self)
         preference_submenu.connect("activate", _set.settings_dialog, self)
 
@@ -216,7 +218,7 @@ class main_window(Gtk.Window):
         about_submenu = Gtk.Action(*add_(_set.liblang.lbl_btn[3]), None, None).create_menu_item()
 
         help_submenu.connect("activate", showhelp, self, _set.liblang)
-        about_submenu.connect("activate", about_program, win, _set.liblang)
+        about_submenu.connect("activate", about_program, self, _set.liblang)
 
         help_submenu.add_accelerator("activate", accelgroup, Gdk.keyval_from_name("F1"), 0, Gtk.AccelFlags.VISIBLE)
 
@@ -303,8 +305,8 @@ class main_window(Gtk.Window):
         clear_btn.set_tooltip_text(_set.liblang.tooltip[6])
         about_btn.set_tooltip_text(_set.liblang.tooltip[7])
 
-        encrypt_btn.connect("clicked", encrypt, self, _set, modules)
-        decrypt_btn.connect("clicked", decrypt, self, _set, modules)
+        encrypt_btn.connect("clicked", encrypt, self, _set)
+        decrypt_btn.connect("clicked", decrypt, self, _set)
         clear_btn.connect("clicked", cleartext, self, True)
         about_btn.connect("clicked", about, self, _set.liblang)
 
@@ -316,11 +318,11 @@ class main_window(Gtk.Window):
 
 ### Program ###
 Set = Settings()
-modules = find_modules()
 prog_ico_name = "emblem-readonly"
 show_notification(Set.liblang.notification)
 
-win = main_window(Set, modules)
+win = main_window(Set)
 win.connect("delete-event", Gtk.main_quit)
+win.connect("destroy-event", Gtk.main_quit)
 win.show_all()
 Gtk.main()

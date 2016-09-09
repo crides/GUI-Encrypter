@@ -1,18 +1,18 @@
 from scale import scale
 from time import time, ctime
 
-__extra__ = {}
+extra = {}
 accept_set = True
 
-class s_tape(str):
+class tape(list):
 
     def __init__(self, iterable=None):
+        super().__init__(iterable)
         self.ptr = 0
 
-    def get(self, i=-1, l=1):
-        i = self.ptr if i == -1 else i
+    def get(self, l=1):
         self.ptr += l
-        return self[i:i + l]
+        return "".join(self[self.ptr - l:self.ptr])
 
 def A2FF(num):
     result = ""
@@ -32,7 +32,7 @@ def FF2A(string):
 def encrypt(string, _set):
     from random import randint
     #string = string.encode()        # To UTF-8
-    string = s_tape(string)
+    _string = tape(string)
 
     # Time encryption
     cur_time = str(int(time() * 1000))
@@ -59,8 +59,8 @@ def encrypt(string, _set):
     # String encryption
     key *= mul
     enc_str = ""
-    while string.ptr < len(string):
-        val = FF2A(string.get(l=randint(1, 6)))
+    while _string.ptr < len(_string):
+        val = FF2A(_string.get(randint(1, 6)))
         base = randint(16, 64)
         enc = scale(10, base, key + val)
         enc_str += temp.format(b=scale(10, 64, base - 1), l=len(enc), v=enc)
@@ -68,15 +68,15 @@ def encrypt(string, _set):
     return ''.join((enc_time, enc_str, hex(hash(string)).strip("-")[2:]))
 
 def decrypt(code, _set):
-    code = s_tape(code)
+    code = tape(code)
     dec_time = []
     for i in range(4):
         base = int(scale(64, 10, code.get())) + 1
         length = int(code.get())
-        enc = code.get(l=length)
+        enc = code.get(length)
         dec_time.append(scale(base, 10, enc))
     mul = int(scale(64, 10, code.get())) - 10
-    order = code.get(l=4)
+    order = code.get(4)
     key = int(dec_time[-1]) * mul
     for i, o_i in zip(order[::-1], range(4)):
         dec_time.insert(int(i), dec_time.pop())
@@ -85,11 +85,12 @@ def decrypt(code, _set):
     while not code[code.ptr].isdigit():
         base = int(scale(64, 10, code.get())) + 1
         length = int(code.get())
-        enc = code.get(l=length)
+        enc = code.get(length)
         dec_str += A2FF(int(scale(base, 10, enc)) - key)
-    _hash = code.get(l=16)
+    _hash = code.get(16)
     if _hash != hex(hash(dec_str)).strip("-")[2:]:
-        raise Exception("Decryption Failed.")
+        print(dec_str, hex(hash(dec_str)).strip("-")[2:], _hash)
+        raise ValueError("Hash match failed.")
     date = ctime(int("".join(dec_time[:3]))).split()
     date = " ".join((date[4], *date[1:4]))
     return dec_str, date

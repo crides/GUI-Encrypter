@@ -2,12 +2,13 @@
 # -*- coding: UTF-8 -*-
 
 class en_US():
-    title = "GEncrypter" 
+    title = "Encrypter" 
     
     notification = "Program Started!"
     
     msg_err_gen = "There is an Error."
     msg_err_unk = "Unknown encrypted code."
+    msg_err_met = "Unknown method: %s"
     msg_stat_enc = ["Encryption Failed.", "Encryption Succeeded."]
     msg_stat_dec = ["Decryption Failed.", "Decryption Succeeded."]
     
@@ -15,12 +16,12 @@ class en_US():
     time_encrypted = "Encrypted on: "
     
     lbl_label = ["TextBox", "Status", "Message", "Time Used"]
-    lbl_set_label = ["Language", "Mode", "Normal", "Hexage", "Encoding"]
+    lbl_set_label = ["Language", "Method", "Encoding"]
     
     lbl_btn = ["E_ncrypt", "_Decrypt", "_Clear", "About"]
-    lbl_set_btn = ["Apply", "Close"]
+    lbl_set_frm = ["Encoding", "Methods"]
     
-    tooltip = ["Text Box for Encryption and Decryption", "Indicate the status of the Encrypter", "For extra output messages like Error", "Time usage of the process", "Encrypt Text", "Decrypt Text", "Clear Status & Text", "Show About Text"]
+    tooltip = ["Text Box for Encryption and Decryption", "Indicate the status of the Encrypter", "For extra output messages like Error", "Time usage of the process", "Encrypt Text", "Decrypt Text", "Clear Status & Text", "Show About Text", "Methods used to encrypt and decrypt", "Refresh available methods"]
     
     abt_comment = "Encrypt your texts and strings"
     
@@ -60,7 +61,9 @@ class zh_CN():
     
     notification = "程序启动！"
     
-    msg_err = "程序出错"
+    msg_err_gen = "程序出错"
+    msg_err_met = "未知方法: %s"
+    msg_err_unk = "未知加密字符串"
     msg_stat_enc = ["加密失败", "加密成功"]
     msg_stat_dec = ["解密失败", "解密成功"]
     
@@ -68,12 +71,12 @@ class zh_CN():
     time_encrypted = "此时被加密："
     
     lbl_label = ["文本框", "状态", "信息", "耗时"]
-    lbl_set_label = ["语言", "模式", "普通", "十六进制"]
+    lbl_set_label = ["语言", "方法", "编码"]
     
     lbl_btn = ["加密(_n)", "解密(_d)", "清除(_c)", "关于"]
-    lbl_set_btn = ["应用", "关闭"]
+    lbl_set_frm = ["编码", "方法"]
     
-    tooltip = ["加密与解密用的文本框", "显示加密器的状态", "用于像错误等更多的信息", "过程耗时", "加密文字", "解密文字", "清除状态和文字", "显示关于"]
+    tooltip = ["加密与解密用的文本框", "显示加密器的状态", "用于像错误等更多的信息", "过程耗时", "加密文字", "解密文字", "清除状态和文字", "显示关于", "加密与解密用的方法", "刷新方法"]
     
     abt_comment = "加密你的字符串"
     about = \

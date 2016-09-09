@@ -1,10 +1,15 @@
 #!/usr/bin/python3
 from scale import scale
+from time import time, ctime
+from random import random
 
-__extra__ = {'Hex': (True, False)}
+#extra = {'Hex': (True, False)}
+extra = {}
 accept_set = True
 
 def encrypt(string, _set):
+    if _set.encode == "UTF": uc3 = utf_uc3
+    else:                    uc3 = uni_uc3
     _time = str(int(time() * 1000))
     part1 = int(_time[10:13])
     part2 = string
@@ -26,6 +31,8 @@ def encrypt(string, _set):
     return retn
 
 def decrypt(code, _set):
+    if _set.encode == "UTF": un3 = utf_un3
+    else:                    un3 = uni_un3
     _time = int(time() * 1000)
     code = code[1:].split("!")
     if code[0][-1] == "h"\
