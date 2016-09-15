@@ -3,7 +3,6 @@
 # -*- coding: utf-8 -*-
 ### GUI Encrypter by Zhu Haoqing (Originally Zhang Jingye) ###
 ### Rev: 5.0
-### Runtime Environment: Python3
 ### Auto Copy after process added
 ### Time bugs fixed
 
@@ -20,24 +19,28 @@ from gi.repository import Gtk, Gdk, Notify
 class Settings():
 
     def __init__(self):
-        config = ConfigParser()
+        self.config = ConfigParser()
+        self.config.optionxform = lambda a:a
         try:
-            config.read("options")
-            self.lang = config["Normal"].get("Language", default.lang)
-            self.encode = config["Normal"].get("Encoding", default.encode)
-            self.method = config["Normal"].get("Method", default.method)
-            self.extra = {k: config["Extra"][k] for k in config["Extra"]}
-        
+            self.config.read("options")
+            _normal = self.config["Normal"]
+            self.lang = _normal.get("Language", default.lang)
+            self.encode = _normal.get("Encoding", default.encode)
+            self.method = _normal.get("Method", default.method)
         except:
-            config["Normal"] = {"Language": default.lang,
+            self.config["Normal"] = {"Language": default.lang,
                                 "Encoding": default.encode,
                                 "Method": default.method}
-            config["Extra"] = {}
-            with open("options", "w") as f: config.write(f)
-            self.lang = default.lang
-            self.method = default.method
-            self.encode = default.encode
-            self.extra = default.extra
+        try:
+            _extra = self.config["Extra"]
+            self.extra = {k: _extra[k] for k in _extra}
+        except:
+            self.config["Extra"] = {}
+        with open("options", "w") as f: self.config.write(f)
+            #self.lang = default.lang
+            #self.method = default.method
+            #self.encode = default.encode
+            #self.extra = default.extra
 
         if self.method not in find_methods(): set_text_mono( \
                 self.strvarmsg, _set.liblang.msg_err_met % self.method)
@@ -45,7 +48,6 @@ class Settings():
         self.liblang = vars(lang)[self.lang]
 
     def register(self, button):
-        self.set_stat = True
         label = button.get_label()
         if label == "English": self.lang = "en_US"
         elif label == "中文":  self.lang = "zh_CN"
@@ -53,32 +55,57 @@ class Settings():
         elif label == "Unicode": self.encode = "Uni"
 
     def method_register(self, button):
-        self.set_stat = True
         self.method = button.get_label()
 
-    def load_methods(self, button, grid, opt_win):
+    def extra_register(self, button, label):
+        self.extra[label] = eval(button.get_label())
+
+    def load_methods(self, button, grid, opt_win, box=None):
         methods = find_methods()
+        globals().update(methods)
         grid.remove_column(0)
         grid.remove_column(0)
         if len(methods) == 0: grid.attach( \
-                Gtk.Label("No methods available"), 0, 0, 1, 1)
+                Gtk.Label(self.liblang.msg_met_nava), 0, 0, 1, 1)
         group = None
         for i, v in enumerate(methods):
-            locals()["btn_%s" % v] = Gtk.RadioButton(label=v, group=group)
-            if i == 0: group = locals()["btn_%s" % v]
-            grid.attach(locals()["btn_%s" % v], *divmod(i, 2)[::-1], 1, 1)
-            locals()["btn_%s" % v].connect("clicked", self.method_register)
-            if v == self.method: locals()["btn_%s" % v].set_active(True)
+            rb = Gtk.RadioButton(label=v, group=group)
+            if i == 0: group = rb
+            grid.attach(rb, *divmod(i, 2)[::-1], 1, 1)
+            rb.connect("clicked", self.method_register)
+            if box: rb.connect("clicked", self.load_extras, box, opt_win)
+            if v == self.method: rb.set_active(True)
         grid.set_column_homogeneous(True)
         grid.set_row_homogeneous(True)
 
         opt_win.show_all()
 
+    def load_extras(self, button, box, opt_win):
+        for child in box.get_children(): box.remove(child)
+        extra = globals()[self.method].extra
+        if extra == {}:
+            box.pack_start(Gtk.Label("No extras available."), True, True, 5)
+            return
+        for key in extra:
+            ava_values = extra[key]
+            grid = Gtk.Grid()
+            box.pack_start(grid, True, True, 3)
+            grid.attach(Gtk.Label(key), 0, 0, 1, 1)
+            group = None
+            for num, val in enumerate(ava_values):
+                rb = Gtk.RadioButton(label=str(val), group=group)
+                if num == 0: group = rb
+                grid.attach(rb, 1, num, 1, 1)
+                rb.connect("clicked", self.extra_register, key)
+                if val == self.extra.get(key): rb.set_active(True)
+        grid.set_column_homogeneous(True)
+        grid.set_row_homogeneous(True)
+        opt_win.show_all()
+
     def settings_dialog(self, widget, win):
         opt_win = Gtk.Window()
         opt_win.set_title(self.liblang.menu_edit_[4])
-        opt_win.set_resizable(False)
-        opt_win.set_size_request(200, -1)
+        #opt_win.set_resizable(False)
         opt_win.set_transient_for(win)
         opt_win.set_position(Gtk.WindowPosition.CENTER_ON_PARENT)
         opt_win.set_modal(True)
@@ -89,7 +116,7 @@ class Settings():
 
         box_general = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
 
-        frame_lang = Gtk.Frame(label=self.liblang.lbl_set_label[0])
+        frame_lang = Gtk.Frame(label=self.liblang.lbl_set_frm[0])
         box_general.pack_start(frame_lang, True, True, 5)
         box_lang_b = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
         frame_lang.add(box_lang_b)
@@ -108,7 +135,7 @@ class Settings():
         note.set_single_line_mode(False)
         box_lang_b.pack_start(note, True, True, 5)
 
-        frame_encode = Gtk.Frame(label=self.liblang.lbl_set_frm[0])
+        frame_encode = Gtk.Frame(label=self.liblang.lbl_set_frm[1])
         box_general.pack_start(frame_encode, True, True, 5)
         box_encode = Gtk.Box()
         frame_encode.add(box_encode)
@@ -119,7 +146,7 @@ class Settings():
         box_encode.pack_start(utf, True, True, 0)
         box_encode.pack_start(uni, True, True, 0)
 
-        frame_method = Gtk.Frame(label=self.liblang.lbl_set_frm[1])
+        frame_method = Gtk.Frame(label=self.liblang.lbl_set_frm[2])
         box_general.pack_start(frame_method, True, True, 5)
         frame_method.set_tooltip_text(self.liblang.tooltip[8])
         box_method = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
@@ -129,29 +156,32 @@ class Settings():
         box_method.pack_start(btn_refresh, False, False, 3)
         btn_refresh.set_tooltip_text(self.liblang.tooltip[9])
         grid_method = Gtk.Grid()
-        btn_refresh.connect("clicked", self.load_methods, \
-                grid_method, opt_win)
         box_method.pack_start(grid_method, False, False, 3)
-        self.load_methods(None, grid_method, opt_win)
+
+        frame_extra = Gtk.Frame(label=self.liblang.lbl_set_frm[3])
+        box_general.pack_start(frame_extra, True, True, 5)
+        box_extra = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
+        frame_extra.add(box_extra)
+        self.load_methods(None, grid_method, opt_win, box_extra)
+        btn_refresh.connect("clicked", self.load_methods, \
+                grid_method, opt_win, box_extra)
+        self.load_extras(None, box_extra, opt_win)
 
         (eng if self.lang == "en_US" else chn).set_active(True)
         (utf if self.encode == "UTF" else uni).set_active(True)
 
-        self.set_stat = False
         opt_win.add(box_general)
         opt_win.show_all()
 
     def applyset(self, opt_win, event, main_win):
-        if self.set_stat:
-            config = ConfigParser()
-            config["Normal"] = {}
-            config["Normal"]["Language"] = self.lang
-            config["Normal"]["Encoding"] = self.encode
-            config["Normal"]["Method"] = self.method
-            config["Extra"] = self.extra
-            with open("options", "w") as f: config.write(f)
-            main_win.set_title(self.liblang.title + " - " + \
-                    self.liblang.lbl_set_label[1] + ": " + self.method)
+        self.config["Normal"] = {
+                "Language": self.lang,
+                "Encoding": self.encode,
+                "Method": self.method}
+        self.config["Extra"] = self.extra
+        with open("options", "w") as f: self.config.write(f)
+        main_win.set_title(self.liblang.title + " - " + \
+                self.liblang.lbl_set_frm[2] + ": " + self.method)
 
 
 class main_window(Gtk.Window):
@@ -160,7 +190,8 @@ class main_window(Gtk.Window):
         super().__init__()
         add_ = lambda a: (a, "_" + a)
         ### Basic Window ###
-        self.set_title(_set.liblang.title + " - " + _set.liblang.lbl_set_label[1] + ": " + _set.method)
+        self.set_title(_set.liblang.title + " - " + \
+                _set.liblang.lbl_set_frm[2] + ": " + _set.method)
         self.set_icon_name(prog_ico_name)
         self.set_resizable(False)
         self.set_size_request(400, 500)

@@ -3,8 +3,7 @@ from scale import scale
 from time import time, ctime
 from random import random
 
-#extra = {'Hex': (True, False)}
-extra = {}
+extra = {'Hex': (True, False)}
 accept_set = True
 
 def encrypt(string, _set):

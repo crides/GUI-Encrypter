@@ -13,12 +13,11 @@ from gi.repository import Gtk, Gdk, Notify
 prog_ico_name = "emblem-readonly"
 
 def find_methods():
-    modules = []
+    modules = {}
     for file in filter(lambda a: a.endswith(".py"), os.listdir("methods")):
         module_name = file[:-3]
-        modules.append(module_name)
-        exec("globals()['{0}'] = import_module('methods.{0}')" \
-                .format(module_name))
+        modules.update( \
+                {module_name: import_module('methods.' + module_name)})
     return modules
 
 def event_esc_exit(window, event):
@@ -102,7 +101,7 @@ def encrypt(button, self, _set):
             set_text_mono(self.strvarstat, _set.liblang.msg_stat_enc[0])
         else:
             set_text_mono(self.strvarstat, _set.liblang.msg_stat_enc[1])
-            set_text_mono(self.strvartimeused, need_time) + _set.liblang.time_encryption)
+            set_text_mono(self.strvartimeused, _set.liblang.time_encryption % need_time)
             self.text_buf.set_text(ect_str)
             clipbd_cb(None, self, "auto_copy")
 
