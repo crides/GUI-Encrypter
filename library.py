@@ -33,30 +33,30 @@ def clipbd_cb(button, self, action):
 def selectall(botton, self):
     self.text_buf.select_range(*win.text_buf.get_bounds())
 
-def showhelp(button, win, liblang):
+def showhelp(button, win, res):
     helpwin = Gtk.Window()
     helpwin.set_transient_for(win)
-    helpwin.set_title(liblang.menu_help)
+    helpwin.set_title(res.menu_help)
     helpwin.set_position(Gtk.WindowPosition.CENTER_ON_PARENT)
     helpwin.set_destroy_with_parent(True)
     helpwin.set_border_width(10)
     helpwin.set_resizable(False)
     helpwin.connect("key_press_event", event_esc_exit)
 
-    helplabel = Gtk.Label(liblang.help)
+    helplabel = Gtk.Label(res.help)
     helplabel.set_line_wrap(True)
     helplabel.set_max_width_chars(30)
     helpwin.add(helplabel)
     helpwin.show_all()
 
-def about_program(button, win, liblang):
+def about_program(button, win, res):
     GPL_License = open("LICENSE").read()
     about = Gtk.AboutDialog(win)
     about.set_program_name("GEncrypter")
     about.set_version("5.0")
     about.set_copyright("Copyright © 2012-2014 Jingye Zhang\n" \
                         "Copyright © 2014-2016 Haoqing Zhu")
-    about.set_comments(liblang.abt_comment)
+    about.set_comments(res.abt_comment)
     about.set_license(GPL_License)
     about.set_wrap_license(True)
     about.set_authors( \
@@ -76,59 +76,59 @@ def show_notification(message):
 def set_text_mono(label, text):
     label.set_markup("<span font=\"Ubuntu Mono 12\">%s</span>" % text)
 
-def encrypt(button, self, _set):
+def encrypt(button, self, env):
     text = self.text_buf.get_text(*self.text_buf.get_bounds(), True)
     cleartext(None, self, False)
     if text == "" or text == "\n" or text == " ":
-        set_text_mono(self.strvarmsg, _set.liblang.msg_err_gen)
-    elif "encrypt" not in vars(globals()[_set.method]):
+        set_text_mono(self.strvarmsg, env.res.msg_err_gen)
+    elif "encrypt" not in vars(globals()[env.method]):
         set_text_mono(self.strvarmsg, "No encrypt method in module.")
     else:
         ### Setting Analysis ###
         extra_args = []
-        if globals()[_set.method].accept_set: extra_args.append(_set)
-        if len(globals()[_set.method].extra) != 0:
-            extra_args.append(_set.extra)
+        if globals()[env.method].accept_set: extra_args.append(env)
+        if len(globals()[env.method].extra) != 0:
+            extra_args.append(env.extra)
 
         start_time = time() * 1000
-        ect_str = globals()[_set.method].encrypt(text, *extra_args)
+        ect_str = globals()[env.method].encrypt(text, *extra_args)
         need_time = time() * 1000 - start_time
-        dct_str, _ = globals()[_set.method].decrypt(ect_str, *extra_args)
+        dct_str, _ = globals()[env.method].decrypt(ect_str, *extra_args)
         ### Verification ###
         if dct_str != text:
-            set_text_mono(self.strvarstat, _set.liblang.msg_stat_enc[0])
+            set_text_mono(self.strvarstat, env.res.msg_stat_enc[0])
         else:
-            set_text_mono(self.strvarstat, _set.liblang.msg_stat_enc[1])
-            set_text_mono(self.strvartimeused, _set.liblang.time_encryption % need_time)
+            set_text_mono(self.strvarstat, env.res.msg_stat_enc[1])
+            set_text_mono(self.strvartimeused, env.res.time_encryption % need_time)
             self.text_buf.set_text(ect_str)
             clipbd_cb(None, self, "auto_copy")
 
-def decrypt(button, self, _set):
+def decrypt(button, self, env):
     ect_str = self.text_buf.get_text(*self.text_buf.get_bounds(), True)
     cleartext(None, self, False)
     if ect_str == "" or ect_str == "\n" or ect_str == " ":
-        set_text_mono(self.strvarmsg, _set.liblang.msg_err_gen)
-    elif "decrypt" not in vars(globals()[_set.method]):
+        set_text_mono(self.strvarmsg, env.res.msg_err_gen)
+    elif "decrypt" not in vars(globals()[env.method]):
         set_text_mono(self.strvarmsg, "No decrypt method in module.")
     else:
         ### Setting Analysis ###
         extra_args = []
-        if globals()[_set.method].accept_set: extra_args.append(_set)
-        if len(globals()[_set.method].extra) != 0:
-            extra_args.append(_set.extra)
+        if globals()[env.method].accept_set: extra_args.append(env)
+        if len(globals()[env.method].extra) != 0:
+            extra_args.append(env.extra)
 
         start_time = time() * 1000
-        text = globals()[_set.method].decrypt(ect_str, *extra_args)
+        text = globals()[env.method].decrypt(ect_str, *extra_args)
         need_time = time() * 1000 - start_time
         if type(text) == tuple and len(text) == 2:
             dct_str, date = text
             self.text_buf.set_text(dct_str)
-            set_text_mono(self.strvarstat, _set.liblang.msg_stat_dec[1])
-            set_text_mono(self.strvarmsg, _set.liblang.time_encrypted + date)
-            set_text_mono(self.strvartimeused, str(need_time) + _set.liblang.time_encryption)
+            set_text_mono(self.strvarstat, env.res.msg_stat_dec[1])
+            set_text_mono(self.strvarmsg, env.res.time_encrypted + date)
+            set_text_mono(self.strvartimeused, str(need_time) + env.res.time_encryption)
             clipbd_cb(None, self, "auto_copy")
         else:
-            set_text_mono(self.strvarstat, _set.liblang.msg_stat_dec[0])
+            set_text_mono(self.strvarstat, env.res.msg_stat_dec[0])
 
 def cleartext(button, self, with_textbox):
     self.strvarstat.set_text("")
@@ -136,9 +136,9 @@ def cleartext(button, self, with_textbox):
     self.strvartimeused.set_text("")
     if with_textbox: self.text_buf.set_text("")
 
-def about(button, self, liblang):
+def about(button, self, res):
     cleartext(None, self, True)
-    self.text_buf.set_text(liblang.about)
+    self.text_buf.set_text(res.about)
 
 class default():
     lang = "en_US"

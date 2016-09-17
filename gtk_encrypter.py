@@ -37,9 +37,9 @@ class Environ():
             #self.extra = default.extra
 
         if self.method not in find_methods(): set_text_mono( \
-                self.strvarmsg, env.liblang.msg_err_met % self.method)
+                self.strvarmsg, env.res.msg_err_met % self.method)
 
-        self.liblang = vars(lang)[self.lang]
+        self.res = vars(lang)[self.lang]
 
     def register(self, button):
         label = button.get_label()
@@ -60,7 +60,7 @@ class Environ():
         grid.remove_column(0)
         grid.remove_column(0)
         if len(methods) == 0: grid.attach( \
-                Gtk.Label(self.liblang.msg_met_nava), 0, 0, 1, 1)
+                Gtk.Label(self.res.msg_met_nava), 0, 0, 1, 1)
         group = None
         for i, v in enumerate(methods):
             rb = Gtk.RadioButton(label=v, group=group)
@@ -78,7 +78,7 @@ class Environ():
         for child in box.get_children(): box.remove(child)
         extra = globals()[self.method].extra
         if extra == {}:
-            box.pack_start(Gtk.Label(self.liblang.lbl_no_ext), True, True, 5)
+            box.pack_start(Gtk.Label(self.res.lbl_no_ext), True, True, 5)
             return
         for key in extra:
             ava_values = extra[key]
@@ -98,7 +98,7 @@ class Environ():
 
     def settings_dialog(self, widget, win):
         opt_win = Gtk.Window()
-        opt_win.set_title(self.liblang.menu_edit_[4])
+        opt_win.set_title(self.res.menu_edit_[4])
         #opt_win.set_resizable(False)
         opt_win.set_transient_for(win)
         opt_win.set_position(Gtk.WindowPosition.CENTER_ON_PARENT)
@@ -110,7 +110,7 @@ class Environ():
 
         box_general = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
 
-        frame_lang = Gtk.Frame(label=self.liblang.lbl_set_frm[0])
+        frame_lang = Gtk.Frame(label=self.res.lbl_set_frm[0])
         box_general.pack_start(frame_lang, True, True, 5)
         box_lang_b = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
         frame_lang.add(box_lang_b)
@@ -123,13 +123,13 @@ class Environ():
         box_lang_s.pack_start(eng, True, True, 0)
         box_lang_s.pack_end(chn, True, True, 0)
 
-        note = Gtk.Label(self.liblang.set_note)
+        note = Gtk.Label(self.res.set_note)
         note.set_line_wrap(True)
         note.set_max_width_chars(30)
         note.set_single_line_mode(False)
         box_lang_b.pack_start(note, True, True, 5)
 
-        frame_encode = Gtk.Frame(label=self.liblang.lbl_set_frm[1])
+        frame_encode = Gtk.Frame(label=self.res.lbl_set_frm[1])
         box_general.pack_start(frame_encode, True, True, 5)
         box_encode = Gtk.Box()
         frame_encode.add(box_encode)
@@ -140,19 +140,19 @@ class Environ():
         box_encode.pack_start(utf, True, True, 0)
         box_encode.pack_start(uni, True, True, 0)
 
-        frame_method = Gtk.Frame(label=self.liblang.lbl_set_frm[2])
+        frame_method = Gtk.Frame(label=self.res.lbl_set_frm[2])
         box_general.pack_start(frame_method, True, True, 5)
-        frame_method.set_tooltip_text(self.liblang.tooltip[8])
+        frame_method.set_tooltip_text(self.res.tooltip[8])
         box_method = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
         frame_method.add(box_method)
         btn_refresh = Gtk.Button.new_from_icon_name("view-refresh", \
                 Gtk.IconSize.LARGE_TOOLBAR)
         box_method.pack_start(btn_refresh, False, False, 3)
-        btn_refresh.set_tooltip_text(self.liblang.tooltip[9])
+        btn_refresh.set_tooltip_text(self.res.tooltip[9])
         grid_method = Gtk.Grid()
         box_method.pack_start(grid_method, False, False, 3)
 
-        frame_extra = Gtk.Frame(label=self.liblang.lbl_set_frm[3])
+        frame_extra = Gtk.Frame(label=self.res.lbl_set_frm[3])
         box_general.pack_start(frame_extra, True, True, 5)
         box_extra = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
         frame_extra.add(box_extra)
@@ -174,8 +174,8 @@ class Environ():
                 "Method": self.method}
         self.config["Extra"] = self.extra
         with open("options", "w") as f: self.config.write(f)
-        main_win.set_title(self.liblang.title + " - " + \
-                self.liblang.lbl_set_frm[2] + ": " + self.method)
+        main_win.set_title(self.res.title + " - " + \
+                self.res.lbl_set_frm[2] + ": " + self.method)
 
 class main_window(Gtk.Window):
 
@@ -183,8 +183,8 @@ class main_window(Gtk.Window):
         super().__init__()
         add_ = lambda a: (a, "_" + a)
         ### Basic Window ###
-        self.set_title(env.liblang.title + " - " + \
-                env.liblang.lbl_set_frm[2] + ": " + env.method)
+        self.set_title(env.res.title + " - " + \
+                env.res.lbl_set_frm[2] + ": " + env.method)
         self.set_icon_name(prog_ico_name)
         self.set_resizable(False)
         self.set_size_request(400, 500)
@@ -206,11 +206,11 @@ class main_window(Gtk.Window):
 
         # Edit Menu #
         sub_edit_menu = Gtk.Menu()
-        copy_submenu = Gtk.MenuItem(env.liblang.menu_edit_[0])
-        cut_submenu = Gtk.MenuItem(env.liblang.menu_edit_[1])
-        paste_submenu = Gtk.MenuItem(env.liblang.menu_edit_[2])
-        selectall_submenu = Gtk.MenuItem(env.liblang.menu_edit_[3])
-        preference_submenu = Gtk.Action(*add_(env.liblang.menu_edit_[4]), None, None).create_menu_item()
+        copy_submenu = Gtk.MenuItem(env.res.menu_edit_[0])
+        cut_submenu = Gtk.MenuItem(env.res.menu_edit_[1])
+        paste_submenu = Gtk.MenuItem(env.res.menu_edit_[2])
+        selectall_submenu = Gtk.MenuItem(env.res.menu_edit_[3])
+        preference_submenu = Gtk.Action(*add_(env.res.menu_edit_[4]), None, None).create_menu_item()
 
         copy_submenu.connect("activate", clipbd_cb, self, "copy")
         cut_submenu.connect("activate", clipbd_cb, self, "cut")
@@ -236,11 +236,11 @@ class main_window(Gtk.Window):
 
         # Help Menu #
         sub_help_menu = Gtk.Menu()
-        help_submenu = Gtk.Action(*add_(env.liblang.menu_help), None, None).create_menu_item()
-        about_submenu = Gtk.Action(*add_(env.liblang.lbl_btn[3]), None, None).create_menu_item()
+        help_submenu = Gtk.Action(*add_(env.res.menu_help), None, None).create_menu_item()
+        about_submenu = Gtk.Action(*add_(env.res.lbl_btn[3]), None, None).create_menu_item()
 
-        help_submenu.connect("activate", showhelp, self, env.liblang)
-        about_submenu.connect("activate", about_program, self, env.liblang)
+        help_submenu.connect("activate", showhelp, self, env.res)
+        about_submenu.connect("activate", about_program, self, env.res)
 
         help_submenu.add_accelerator("activate", accelgroup, Gdk.keyval_from_name("F1"), 0, Gtk.AccelFlags.VISIBLE)
 
@@ -258,8 +258,8 @@ class main_window(Gtk.Window):
         align.set_padding(2, 0, 10, 0)
 
         lbl_textbox = Gtk.Label()
-        lbl_textbox.set_markup("<b>%s</b>" % env.liblang.lbl_label[0])
-        lbl_textbox.set_tooltip_text(env.liblang.tooltip[0])
+        lbl_textbox.set_markup("<b>%s</b>" % env.res.lbl_label[0])
+        lbl_textbox.set_tooltip_text(env.res.tooltip[0])
         box_general.pack_start(align, False, False, 0)
         align.add(lbl_textbox)
 
@@ -291,14 +291,14 @@ class main_window(Gtk.Window):
         lbl_timeused = Gtk.Label()
 
         mono = lambda a: "<span font=\"Ubuntu Mono 12\">%s</span>" % a
-        lbl_stat.set_markup(mono(env.liblang.lbl_label[1]))
-        lbl_msg.set_markup(mono(env.liblang.lbl_label[2]))
-        lbl_timeused.set_markup(mono(env.liblang.lbl_label[3]))
+        lbl_stat.set_markup(mono(env.res.lbl_label[1]))
+        lbl_msg.set_markup(mono(env.res.lbl_label[2]))
+        lbl_timeused.set_markup(mono(env.res.lbl_label[3]))
         del mono
 
-        lbl_stat.set_tooltip_text(env.liblang.tooltip[1])
-        lbl_msg.set_tooltip_text(env.liblang.tooltip[2])
-        lbl_timeused.set_tooltip_text(env.liblang.tooltip[3])
+        lbl_stat.set_tooltip_text(env.res.tooltip[1])
+        lbl_msg.set_tooltip_text(env.res.tooltip[2])
+        lbl_timeused.set_tooltip_text(env.res.tooltip[3])
 
         self.strvarstat = Gtk.Label()
         self.strvarmsg = Gtk.Label()
@@ -317,20 +317,20 @@ class main_window(Gtk.Window):
         btn_box = Gtk.Box(spacing=6)
         box_general.pack_start(btn_box, False, False, 2)
 
-        btn_encrypt = Gtk.Button(env.liblang.lbl_btn[0], None, True)
-        btn_decrypt = Gtk.Button(env.liblang.lbl_btn[1], None, True)
-        btn_clear = Gtk.Button(env.liblang.lbl_btn[2], None, True)
-        btn_about = Gtk.Button(env.liblang.lbl_btn[3], None, True)
+        btn_encrypt = Gtk.Button(env.res.lbl_btn[0], None, True)
+        btn_decrypt = Gtk.Button(env.res.lbl_btn[1], None, True)
+        btn_clear = Gtk.Button(env.res.lbl_btn[2], None, True)
+        btn_about = Gtk.Button(env.res.lbl_btn[3], None, True)
 
-        btn_encrypt.set_tooltip_text(env.liblang.tooltip[4])
-        btn_decrypt.set_tooltip_text(env.liblang.tooltip[5])
-        btn_clear.set_tooltip_text(env.liblang.tooltip[6])
-        btn_about.set_tooltip_text(env.liblang.tooltip[7])
+        btn_encrypt.set_tooltip_text(env.res.tooltip[4])
+        btn_decrypt.set_tooltip_text(env.res.tooltip[5])
+        btn_clear.set_tooltip_text(env.res.tooltip[6])
+        btn_about.set_tooltip_text(env.res.tooltip[7])
 
         btn_encrypt.connect("clicked", encrypt, self, env)
         btn_decrypt.connect("clicked", decrypt, self, env)
         btn_clear.connect("clicked", cleartext, self, True)
-        btn_about.connect("clicked", about, self, env.liblang)
+        btn_about.connect("clicked", about, self, env.res)
 
         btn_box.pack_start(btn_encrypt, True, True, 0)
         btn_box.pack_start(btn_decrypt, True, True, 0)
@@ -341,7 +341,7 @@ class main_window(Gtk.Window):
 ### Program ###
 env = Environ()
 prog_ico_name = "emblem-readonly"
-show_notification(env.liblang.notification)
+show_notification(env.res.notification)
 
 win = main_window(env)
 win.connect("delete-event", Gtk.main_quit)
