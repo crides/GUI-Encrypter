@@ -9,14 +9,8 @@
 import lang
 from library import *
 from configparser import ConfigParser
-import gi
 
-gi.require_version("Gtk", "3.0")
-gi.require_version("Notify", "0.7")
-
-from gi.repository import Gtk, Gdk, Notify
-
-class Settings():
+class Environ():
 
     def __init__(self):
         self.config = ConfigParser()
@@ -43,7 +37,7 @@ class Settings():
             #self.extra = default.extra
 
         if self.method not in find_methods(): set_text_mono( \
-                self.strvarmsg, _set.liblang.msg_err_met % self.method)
+                self.strvarmsg, env.liblang.msg_err_met % self.method)
 
         self.liblang = vars(lang)[self.lang]
 
@@ -84,7 +78,7 @@ class Settings():
         for child in box.get_children(): box.remove(child)
         extra = globals()[self.method].extra
         if extra == {}:
-            box.pack_start(Gtk.Label("No extras available."), True, True, 5)
+            box.pack_start(Gtk.Label(self.liblang.lbl_no_ext), True, True, 5)
             return
         for key in extra:
             ava_values = extra[key]
@@ -183,15 +177,14 @@ class Settings():
         main_win.set_title(self.liblang.title + " - " + \
                 self.liblang.lbl_set_frm[2] + ": " + self.method)
 
-
 class main_window(Gtk.Window):
 
-    def __init__(self, _set):
+    def __init__(self, env):
         super().__init__()
         add_ = lambda a: (a, "_" + a)
         ### Basic Window ###
-        self.set_title(_set.liblang.title + " - " + \
-                _set.liblang.lbl_set_frm[2] + ": " + _set.method)
+        self.set_title(env.liblang.title + " - " + \
+                env.liblang.lbl_set_frm[2] + ": " + env.method)
         self.set_icon_name(prog_ico_name)
         self.set_resizable(False)
         self.set_size_request(400, 500)
@@ -213,18 +206,17 @@ class main_window(Gtk.Window):
 
         # Edit Menu #
         sub_edit_menu = Gtk.Menu()
-        copy_submenu = Gtk.MenuItem(_set.liblang.menu_edit_[0])
-        cut_submenu = Gtk.MenuItem(_set.liblang.menu_edit_[1])
-        paste_submenu = Gtk.MenuItem(_set.liblang.menu_edit_[2])
-        selectall_submenu = Gtk.MenuItem(_set.liblang.menu_edit_[3])
-        menu_separater = Gtk.SeparatorMenuItem()
-        preference_submenu = Gtk.Action(*add_(_set.liblang.menu_edit_[4]), None, None).create_menu_item()
+        copy_submenu = Gtk.MenuItem(env.liblang.menu_edit_[0])
+        cut_submenu = Gtk.MenuItem(env.liblang.menu_edit_[1])
+        paste_submenu = Gtk.MenuItem(env.liblang.menu_edit_[2])
+        selectall_submenu = Gtk.MenuItem(env.liblang.menu_edit_[3])
+        preference_submenu = Gtk.Action(*add_(env.liblang.menu_edit_[4]), None, None).create_menu_item()
 
         copy_submenu.connect("activate", clipbd_cb, self, "copy")
         cut_submenu.connect("activate", clipbd_cb, self, "cut")
         paste_submenu.connect("activate", clipbd_cb, self, "paste")
         selectall_submenu.connect("activate", selectall, self)
-        preference_submenu.connect("activate", _set.settings_dialog, self)
+        preference_submenu.connect("activate", env.settings_dialog, self)
 
         preference_submenu.add_accelerator("activate", accelgroup, \
                 Gdk.keyval_from_name("P"), \
@@ -235,7 +227,7 @@ class main_window(Gtk.Window):
         sub_edit_menu.append(cut_submenu)
         sub_edit_menu.append(paste_submenu)
         sub_edit_menu.append(selectall_submenu)
-        sub_edit_menu.append(menu_separater)
+        sub_edit_menu.append(Gtk.SeparatorMenuItem())
         sub_edit_menu.append(preference_submenu)
 
         edit_menu = Gtk.Action(*add_("Edit"), None, None).create_menu_item()
@@ -244,17 +236,16 @@ class main_window(Gtk.Window):
 
         # Help Menu #
         sub_help_menu = Gtk.Menu()
-        help_submenu = Gtk.Action(*add_(_set.liblang.menu_help), None, None).create_menu_item()
-        menu_separater = Gtk.SeparatorMenuItem()
-        about_submenu = Gtk.Action(*add_(_set.liblang.lbl_btn[3]), None, None).create_menu_item()
+        help_submenu = Gtk.Action(*add_(env.liblang.menu_help), None, None).create_menu_item()
+        about_submenu = Gtk.Action(*add_(env.liblang.lbl_btn[3]), None, None).create_menu_item()
 
-        help_submenu.connect("activate", showhelp, self, _set.liblang)
-        about_submenu.connect("activate", about_program, self, _set.liblang)
+        help_submenu.connect("activate", showhelp, self, env.liblang)
+        about_submenu.connect("activate", about_program, self, env.liblang)
 
         help_submenu.add_accelerator("activate", accelgroup, Gdk.keyval_from_name("F1"), 0, Gtk.AccelFlags.VISIBLE)
 
         sub_help_menu.append(help_submenu)
-        sub_help_menu.append(menu_separater)
+        sub_help_menu.append(Gtk.SeparatorMenuItem())
         sub_help_menu.append(about_submenu)
 
         help_menu = Gtk.Action(*add_("Help"), None, None).create_menu_item()
@@ -267,8 +258,8 @@ class main_window(Gtk.Window):
         align.set_padding(2, 0, 10, 0)
 
         lbl_textbox = Gtk.Label()
-        lbl_textbox.set_markup("<b>%s</b>" % _set.liblang.lbl_label[0])
-        lbl_textbox.set_tooltip_text(_set.liblang.tooltip[0])
+        lbl_textbox.set_markup("<b>%s</b>" % env.liblang.lbl_label[0])
+        lbl_textbox.set_tooltip_text(env.liblang.tooltip[0])
         box_general.pack_start(align, False, False, 0)
         align.add(lbl_textbox)
 
@@ -300,14 +291,14 @@ class main_window(Gtk.Window):
         lbl_timeused = Gtk.Label()
 
         mono = lambda a: "<span font=\"Ubuntu Mono 12\">%s</span>" % a
-        lbl_stat.set_markup(mono(_set.liblang.lbl_label[1]))
-        lbl_msg.set_markup(mono(_set.liblang.lbl_label[2]))
-        lbl_timeused.set_markup(mono(_set.liblang.lbl_label[3]))
+        lbl_stat.set_markup(mono(env.liblang.lbl_label[1]))
+        lbl_msg.set_markup(mono(env.liblang.lbl_label[2]))
+        lbl_timeused.set_markup(mono(env.liblang.lbl_label[3]))
         del mono
 
-        lbl_stat.set_tooltip_text(_set.liblang.tooltip[1])
-        lbl_msg.set_tooltip_text(_set.liblang.tooltip[2])
-        lbl_timeused.set_tooltip_text(_set.liblang.tooltip[3])
+        lbl_stat.set_tooltip_text(env.liblang.tooltip[1])
+        lbl_msg.set_tooltip_text(env.liblang.tooltip[2])
+        lbl_timeused.set_tooltip_text(env.liblang.tooltip[3])
 
         self.strvarstat = Gtk.Label()
         self.strvarmsg = Gtk.Label()
@@ -323,37 +314,36 @@ class main_window(Gtk.Window):
         box_timeused.pack_end(self.strvartimeused, False, False, 0)
 
         ### Buttons ###
-        btn_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
+        btn_box = Gtk.Box(spacing=6)
         box_general.pack_start(btn_box, False, False, 2)
 
-        encrypt_btn = Gtk.Button(_set.liblang.lbl_btn[0], None, True)
-        decrypt_btn = Gtk.Button(_set.liblang.lbl_btn[1], None, True)
-        clear_btn = Gtk.Button(_set.liblang.lbl_btn[2], None, True)
-        about_btn = Gtk.Button(_set.liblang.lbl_btn[3], None, True)
+        btn_encrypt = Gtk.Button(env.liblang.lbl_btn[0], None, True)
+        btn_decrypt = Gtk.Button(env.liblang.lbl_btn[1], None, True)
+        btn_clear = Gtk.Button(env.liblang.lbl_btn[2], None, True)
+        btn_about = Gtk.Button(env.liblang.lbl_btn[3], None, True)
 
-        encrypt_btn.set_tooltip_text(_set.liblang.tooltip[4])
-        decrypt_btn.set_tooltip_text(_set.liblang.tooltip[5])
-        clear_btn.set_tooltip_text(_set.liblang.tooltip[6])
-        about_btn.set_tooltip_text(_set.liblang.tooltip[7])
+        btn_encrypt.set_tooltip_text(env.liblang.tooltip[4])
+        btn_decrypt.set_tooltip_text(env.liblang.tooltip[5])
+        btn_clear.set_tooltip_text(env.liblang.tooltip[6])
+        btn_about.set_tooltip_text(env.liblang.tooltip[7])
 
-        encrypt_btn.connect("clicked", encrypt, self, _set)
-        decrypt_btn.connect("clicked", decrypt, self, _set)
-        clear_btn.connect("clicked", cleartext, self, True)
-        about_btn.connect("clicked", about, self, _set.liblang)
+        btn_encrypt.connect("clicked", encrypt, self, env)
+        btn_decrypt.connect("clicked", decrypt, self, env)
+        btn_clear.connect("clicked", cleartext, self, True)
+        btn_about.connect("clicked", about, self, env.liblang)
 
-        btn_box.pack_start(encrypt_btn, True, True, 0)
-        btn_box.pack_start(decrypt_btn, True, True, 0)
-        btn_box.pack_start(clear_btn, True, True, 0)
-        btn_box.pack_start(about_btn, True, True, 0)
+        btn_box.pack_start(btn_encrypt, True, True, 0)
+        btn_box.pack_start(btn_decrypt, True, True, 0)
+        btn_box.pack_start(btn_clear, True, True, 0)
+        btn_box.pack_start(btn_about, True, True, 0)
         btn_box.set_homogeneous(True)
 
 ### Program ###
-Set = Settings()
+env = Environ()
 prog_ico_name = "emblem-readonly"
-show_notification(Set.liblang.notification)
+show_notification(env.liblang.notification)
 
-win = main_window(Set)
+win = main_window(env)
 win.connect("delete-event", Gtk.main_quit)
-win.connect("destroy-event", Gtk.main_quit)
 win.show_all()
 Gtk.main()

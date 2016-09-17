@@ -1,8 +1,6 @@
 #!/usr/bin/python3
 
-from time import time, ctime
-from math import floor
-from random import random
+from time import time
 from importlib import import_module
 import os, sys
 import gi

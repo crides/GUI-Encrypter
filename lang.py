@@ -1,7 +1,7 @@
 #!/usr/bin/python3.4
 # -*- coding: UTF-8 -*-
 
-class en_US():
+class en_US:
     title = "Encrypter" 
     
     notification = "Program Started!"
@@ -19,6 +19,7 @@ class en_US():
     lbl_label = ["TextBox", "Status", "Message", "Time Used"]
     lbl_btn = ["E_ncrypt", "_Decrypt", "_Clear", "About"]
     lbl_set_frm = ["Language", "Encoding", "Methods", "Extra"]
+    lbl_no_ext = "No extras available."
     
     tooltip = ["Text Box for Encryption and Decryption", "Indicate the status of the Encrypter", "For extra output messages like Error", "Time usage of the process", "Encrypt Text", "Decrypt Text", "Clear Status & Text", "Show About Text", "Methods used to encrypt and decrypt", "Refresh available methods"]
     
@@ -55,7 +56,7 @@ You can also use the mnemonic keys (Alt+n/d/c) to activate the buttons."""
 
     set_note = "Note: You should restart the program to apply the change.\n注意：您应重启程序来应用选项"
     
-class zh_CN():
+class zh_CN:
     title = "加密器"
     
     notification = "程序启动！"
@@ -74,6 +75,7 @@ class zh_CN():
     
     lbl_btn = ["加密(_n)", "解密(_d)", "清除(_c)", "关于"]
     lbl_set_frm = ["语言", "编码", "方法", "附加"]
+    lbl_no_ext = "没有可用的附加选项。"
     
     tooltip = ["加密与解密用的文本框", "显示加密器的状态", "用于像错误等更多的信息", "过程耗时", "加密文字", "解密文字", "清除状态和文字", "显示关于", "加密与解密用的方法", "刷新方法"]
     
