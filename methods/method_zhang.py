@@ -6,7 +6,7 @@ from random import random
 extra = {'Hex': (True, False)}
 accept_set = True
 
-def encrypt(string, _set):
+def encrypt(string, _set, extra):
     if _set.encode == "UTF": uc3 = utf_uc3
     else:                    uc3 = uni_uc3
     _time = str(int(time() * 1000))
@@ -29,7 +29,7 @@ def encrypt(string, _set):
     retn += ",".join((ectpart3, ectpart4, ectpart5, ectpart6))
     return retn
 
-def decrypt(code, _set):
+def decrypt(code, _set, extra):
     if _set.encode == "UTF": un3 = utf_un3
     else:                    un3 = uni_un3
     _time = int(time() * 1000)

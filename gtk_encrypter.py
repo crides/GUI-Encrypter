@@ -18,28 +18,24 @@ class Environ():
         try:
             self.config.read("options")
             _normal = self.config["Normal"]
-            self.lang = _normal.get("Language", default.lang)
-            self.encode = _normal.get("Encoding", default.encode)
-            self.method = _normal.get("Method", default.method)
+            self.lang = _normal.get("Language", default["Language"])
+            self.encode = _normal.get("Encoding", default["Encoding"])
+            self.method = _normal.get("Method", default["Method"])
         except:
-            self.config["Normal"] = {"Language": default.lang,
-                                "Encoding": default.encode,
-                                "Method": default.method}
+            self.config["Normal"] = default
         try:
             _extra = self.config["Extra"]
             self.extra = {k: _extra[k] for k in _extra}
         except:
             self.config["Extra"] = {}
         with open("options", "w") as f: self.config.write(f)
-            #self.lang = default.lang
-            #self.method = default.method
-            #self.encode = default.encode
-            #self.extra = default.extra
 
-        if self.method not in find_methods(): set_text_mono( \
-                self.strvarmsg, env.res.msg_err_met % self.method)
-
+        methods = find_methods()
+        globals().update(methods)
         self.res = vars(lang)[self.lang]
+
+        if self.method not in methods: set_text_mono( \
+                self.strvarmsg, env.res.err_met % self.method)
 
     def register(self, button):
         label = button.get_label()
@@ -54,20 +50,20 @@ class Environ():
     def extra_register(self, button, label):
         self.extra[label] = eval(button.get_label())
 
-    def load_methods(self, button, grid, opt_win, box=None):
+    def load_methods(self, button, grid, opt_win, box):
         methods = find_methods()
         globals().update(methods)
         grid.remove_column(0)
         grid.remove_column(0)
         if len(methods) == 0: grid.attach( \
-                Gtk.Label(self.res.msg_met_nava), 0, 0, 1, 1)
+                Gtk.Label(self.res.met_nava), 0, 0, 1, 1)
         group = None
         for i, v in enumerate(methods):
             rb = Gtk.RadioButton(label=v, group=group)
             if i == 0: group = rb
             grid.attach(rb, *divmod(i, 2)[::-1], 1, 1)
             rb.connect("clicked", self.method_register)
-            if box: rb.connect("clicked", self.load_extras, box, opt_win)
+            rb.connect("clicked", self.load_extras, box, opt_win)
             if v == self.method: rb.set_active(True)
         grid.set_column_homogeneous(True)
         grid.set_row_homogeneous(True)
@@ -99,14 +95,14 @@ class Environ():
     def settings_dialog(self, widget, win):
         opt_win = Gtk.Window()
         opt_win.set_title(self.res.menu_edit_[4])
-        #opt_win.set_resizable(False)
         opt_win.set_transient_for(win)
         opt_win.set_position(Gtk.WindowPosition.CENTER_ON_PARENT)
         opt_win.set_modal(True)
         opt_win.set_destroy_with_parent(True)
         opt_win.set_border_width(10)
-        #opt_win.connect("key-press-event", event_esc_exit)
+        opt_win.connect("key-press-event", event_esc_exit)
         opt_win.connect("delete-event", self.applyset, win)
+        opt_win.connect("delete-event", lambda *a:opt_win.destroy())
 
         box_general = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
 
@@ -174,8 +170,9 @@ class Environ():
                 "Method": self.method}
         self.config["Extra"] = self.extra
         with open("options", "w") as f: self.config.write(f)
-        main_win.set_title(self.res.title + " - " + \
-                self.res.lbl_set_frm[2] + ": " + self.method)
+        main_win.set_title("{} - {}: {}".format( \
+                self.res.title, self.res.lbl_set_frm[2], self.method))
+        return False
 
 class main_window(Gtk.Window):
 
@@ -190,7 +187,7 @@ class main_window(Gtk.Window):
         self.set_size_request(400, 500)
         self.set_position(Gtk.WindowPosition.CENTER)
         self.set_border_width(10)
-        #self.connect("key-press-event", event_esc_exit)
+        self.connect("key-press-event", event_esc_exit)
 
         ### General Box ###
         box_general = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
@@ -242,7 +239,8 @@ class main_window(Gtk.Window):
         help_submenu.connect("activate", showhelp, self, env.res)
         about_submenu.connect("activate", about_program, self, env.res)
 
-        help_submenu.add_accelerator("activate", accelgroup, Gdk.keyval_from_name("F1"), 0, Gtk.AccelFlags.VISIBLE)
+        help_submenu.add_accelerator("activate", accelgroup, \
+                Gdk.keyval_from_name("F1"), 0, Gtk.AccelFlags.VISIBLE)
 
         sub_help_menu.append(help_submenu)
         sub_help_menu.append(Gtk.SeparatorMenuItem())
@@ -253,18 +251,16 @@ class main_window(Gtk.Window):
         help_menu.set_submenu(sub_help_menu)
 
         ### Text Box ###
-        align = Gtk.Alignment()
-        align.set(0, 0, 0, 0)
-        align.set_padding(2, 0, 10, 0)
-
         lbl_textbox = Gtk.Label()
         lbl_textbox.set_markup("<b>%s</b>" % env.res.lbl_label[0])
         lbl_textbox.set_tooltip_text(env.res.tooltip[0])
-        box_general.pack_start(align, False, False, 0)
-        align.add(lbl_textbox)
+        lbl_textbox.set_halign(Gtk.Align.START)
+        lbl_textbox.set_margin_start(10)
+        box_general.pack_start(lbl_textbox, False, False, 0)
 
         scrolled_window = Gtk.ScrolledWindow()
-        scrolled_window.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.ALWAYS)
+        scrolled_window.set_policy( \
+                Gtk.PolicyType.NEVER, Gtk.PolicyType.ALWAYS)
         scrolled_window.set_hexpand(False)
         scrolled_window.set_vexpand(True)
         box_general.pack_start(scrolled_window, True, True, 0)

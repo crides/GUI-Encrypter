@@ -1,19 +1,21 @@
 #!/usr/bin/python3.4
 # -*- coding: UTF-8 -*-
+### THIS IS THE RESOURCE FILE OF `GEncrypter`
+### DO NOT EDIT BY YOUR SELF UNLESS WITH CAUTION
 
 class en_US:
     title = "Encrypter" 
     
     notification = "Program Started!"
     
-    msg_err_gen = "There is an Error."
-    msg_err_unk = "Unknown encrypted code."
-    msg_err_met = "Unknown method: %s"
-    msg_met_nava = "No methods avaliable."
-    msg_stat_enc = ["Encryption Failed.", "Encryption Succeeded."]
-    msg_stat_dec = ["Decryption Failed.", "Decryption Succeeded."]
+    err_gen = "There is an Error."
+    err_unk = "Unknown encrypted code."
+    err_met = "Unknown method: %s"
+    met_nava = "No methods avaliable."
+    stat_enc = ["Encryption Failed.", "Encryption Succeeded."]
+    stat_dec = ["Decryption Failed.", "Decryption Succeeded."]
     
-    time_encryption = "%dms"
+    time_used = "%.3fms"
     time_encrypted = "Encrypted on: "
     
     lbl_label = ["TextBox", "Status", "Message", "Time Used"]
@@ -27,7 +29,7 @@ class en_US:
     
     about = \
 """This is a program which is used to encrypt and decrypt strings written by Zhu Haoqing. The Program is originally written by zhangjingye (Github: zhangjingye03) in JavaScript, translated by zhuhaoqing (Github: Irides-Chromium) into Python3. The Program can only decrypt strings which were encrypted by (any branches, or the original web version by Zhang Jingye) this program.
-CopyRight (C) 2014 ~ 2016
+CopyRight © 2014 ~ 2016
 All Rights Reserved.
 
 Author: <zjy@sugus>
@@ -61,14 +63,14 @@ class zh_CN:
     
     notification = "程序启动！"
     
-    msg_err_gen = "程序出错"
-    msg_err_met = "未知方法: %s"
-    msg_err_unk = "未知加密字符串"
-    msg_met_nava = "无可用方法"
-    msg_stat_enc = ["加密失败", "加密成功"]
-    msg_stat_dec = ["解密失败", "解密成功"]
+    err_gen = "程序出错"
+    err_met = "未知方法: %s"
+    err_unk = "未知加密字符串"
+    met_nava = "无可用方法"
+    stat_enc = ["加密失败", "加密成功"]
+    stat_dec = ["解密失败", "解密成功"]
     
-    time_encryption = "%d毫秒"
+    time_used = "%.3f毫秒"
     time_encrypted = "此时被加密："
     
     lbl_label = ["文本框", "状态", "信息", "耗时"]
@@ -81,8 +83,8 @@ class zh_CN:
     
     abt_comment = "加密你的字符串"
     about = \
-"""这是一个由 Zhu Haoqing 编写的用于加密和解密字符串的程序。这个程序原本由 zhangjingye (Github: zhangjingye03) 用JavaScript编写，由 Zhu Haoqing (Github: Irides-Chromium) 翻译成为 Python3。本程序只能解密由(任意分支或原网页版的)本程序加密的字符串。
-版权所有(C) 2014 ~ 2016
+"""这是一个由 Zhu Haoqing 编写的用于加密和解密字符串的程序。这个程序原本由 Jingye Zhang (Github: zhangjingye03) 用JavaScript编写，由 Haoqing Zhu (Github: Irides-Chromium) 翻译成为 Python3。本程序只能解密由(任意分支或原网页版的)本程序加密的字符串。
+版权所有 © 2014 ~ 2016
 作者： <zjy@sugus>
 翻译： <zhuhaoqing@live.cn>
 版本： 5.0

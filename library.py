@@ -2,8 +2,7 @@
 
 from time import time
 from importlib import import_module
-import os, sys
-import gi
+import os, sys, gi
 gi.require_version("Gtk", "3.0")
 gi.require_version("Notify", "0.7")
 from gi.repository import Gtk, Gdk, Notify
@@ -14,12 +13,14 @@ def find_methods():
     modules = {}
     for file in filter(lambda a: a.endswith(".py"), os.listdir("methods")):
         module_name = file[:-3]
-        modules.update( \
-                {module_name: import_module('methods.' + module_name)})
+        module = {module_name: import_module('methods.' + module_name)}
+        modules.update(module)
+        globals().update(module)
     return modules
 
 def event_esc_exit(window, event):
-    if event.keyval == Gdk.keyval_from_name("Escape"): window.destroy()
+    if event.keyval == Gdk.keyval_from_name("Escape"):
+        window.emit("delete-event", Gdk.Event())
 
 def clipbd_cb(button, self, action):
     clip = Gtk.Clipboard.get(Gdk.SELECTION_CLIPBOARD)
@@ -27,7 +28,8 @@ def clipbd_cb(button, self, action):
     elif action == "cut": self.text_buf.cut_clipboard(clip, True)
     elif action == "paste": self.text_buf.paste_clipboard(clip, None, True)
     elif action == "auto_copy":
-        clip.set_text(self.text_buf.get_text(*self.text_buf.get_bounds(), True), -1)
+        clip.set_text(self.text_buf.get_text( \
+                *self.text_buf.get_bounds(), True), -1)
         show_notification("String copied into clipboard.")
 
 def selectall(botton, self):
@@ -42,6 +44,7 @@ def showhelp(button, win, res):
     helpwin.set_border_width(10)
     helpwin.set_resizable(False)
     helpwin.connect("key_press_event", event_esc_exit)
+    helpwin.connect("delete-event", lambda *a:helpwin.destroy())
 
     helplabel = Gtk.Label(res.help)
     helplabel.set_line_wrap(True)
@@ -80,55 +83,66 @@ def encrypt(button, self, env):
     text = self.text_buf.get_text(*self.text_buf.get_bounds(), True)
     cleartext(None, self, False)
     if text == "" or text == "\n" or text == " ":
-        set_text_mono(self.strvarmsg, env.res.msg_err_gen)
-    elif "encrypt" not in vars(globals()[env.method]):
+        set_text_mono(self.strvarmsg, env.res.err_gen)
+        return
+    if "encrypt" not in vars(globals()[env.method]):
         set_text_mono(self.strvarmsg, "No encrypt method in module.")
-    else:
-        ### Setting Analysis ###
-        extra_args = []
-        if globals()[env.method].accept_set: extra_args.append(env)
-        if len(globals()[env.method].extra) != 0:
-            extra_args.append(env.extra)
+        return
+    ### Setting Analysis ###
+    extra_args = []
+    if globals()[env.method].accept_set: extra_args.append(env)
+    if len(globals()[env.method].extra) != 0:
+        extra_args.append(env.extra)
 
-        start_time = time() * 1000
-        ect_str = globals()[env.method].encrypt(text, *extra_args)
-        need_time = time() * 1000 - start_time
-        dct_str, _ = globals()[env.method].decrypt(ect_str, *extra_args)
-        ### Verification ###
-        if dct_str != text:
-            set_text_mono(self.strvarstat, env.res.msg_stat_enc[0])
-        else:
-            set_text_mono(self.strvarstat, env.res.msg_stat_enc[1])
-            set_text_mono(self.strvartimeused, env.res.time_encryption % need_time)
-            self.text_buf.set_text(ect_str)
-            clipbd_cb(None, self, "auto_copy")
+    exception = ()
+    start_time = time() * 1000
+    try: ect_str = globals()[env.method].encrypt(text, *extra_args)
+    except: exception = sys.exc_info()
+    need_time = time() * 1000 - start_time
+    try: dct_str, _ = globals()[env.method].decrypt(ect_str, *extra_args)
+    except: exception = sys.exc_info()
+    ### Verification ###
+    if exception or dct_str != text:
+        set_text_mono(self.strvarstat, env.res.stat_enc[0])
+        if exception: set_text_mono(self.strvarmsg, exception[1])
+        return
+    set_text_mono(self.strvarstat, env.res.stat_enc[1])
+    set_text_mono(self.strvartimeused, env.res.time_used % need_time)
+    self.text_buf.set_text(ect_str)
+    clipbd_cb(None, self, "auto_copy")
 
 def decrypt(button, self, env):
     ect_str = self.text_buf.get_text(*self.text_buf.get_bounds(), True)
     cleartext(None, self, False)
     if ect_str == "" or ect_str == "\n" or ect_str == " ":
-        set_text_mono(self.strvarmsg, env.res.msg_err_gen)
-    elif "decrypt" not in vars(globals()[env.method]):
+        set_text_mono(self.strvarmsg, env.res.err_gen)
+        return
+    if "decrypt" not in vars(globals()[env.method]):
         set_text_mono(self.strvarmsg, "No decrypt method in module.")
-    else:
-        ### Setting Analysis ###
-        extra_args = []
-        if globals()[env.method].accept_set: extra_args.append(env)
-        if len(globals()[env.method].extra) != 0:
-            extra_args.append(env.extra)
+        return
+    ### Setting Analysis ###
+    extra_args = []
+    if globals()[env.method].accept_set: extra_args.append(env)
+    if len(globals()[env.method].extra) != 0:
+        extra_args.append(env.extra)
 
-        start_time = time() * 1000
-        text = globals()[env.method].decrypt(ect_str, *extra_args)
-        need_time = time() * 1000 - start_time
-        if type(text) == tuple and len(text) == 2:
-            dct_str, date = text
-            self.text_buf.set_text(dct_str)
-            set_text_mono(self.strvarstat, env.res.msg_stat_dec[1])
-            set_text_mono(self.strvarmsg, env.res.time_encrypted + date)
-            set_text_mono(self.strvartimeused, str(need_time) + env.res.time_encryption)
-            clipbd_cb(None, self, "auto_copy")
-        else:
-            set_text_mono(self.strvarstat, env.res.msg_stat_dec[0])
+    ### Verification ###
+    exception = ()
+    text = ()
+    start_time = time() * 1000
+    try: text = globals()[env.method].decrypt(ect_str, *extra_args)
+    except: exception = sys.exc_info()
+    need_time = time() * 1000 - start_time
+    if type(text) != tuple or len(text) != 2 or exception:
+        set_text_mono(self.strvarstat, env.res.stat_dec[0])
+        if exception: set_text_mono(self.strvarmsg, exception[1])
+        return
+    dct_str, date = text
+    self.text_buf.set_text(dct_str)
+    set_text_mono(self.strvarstat, env.res.stat_dec[1])
+    set_text_mono(self.strvarmsg, env.res.time_encrypted + date)
+    set_text_mono(self.strvartimeused, env.res.time_used % need_time)
+    clipbd_cb(None, self, "auto_copy")
 
 def cleartext(button, self, with_textbox):
     self.strvarstat.set_text("")
@@ -140,8 +154,6 @@ def about(button, self, res):
     cleartext(None, self, True)
     self.text_buf.set_text(res.about)
 
-class default():
-    lang = "en_US"
-    encode = "ASCII"
-    method = "method_zhang"
-    extra = {}
+default = {"Language": "en_US",
+           "Encoding": "ASCII",
+           "Method": "method_zhang"}
